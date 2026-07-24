@@ -1,0 +1,24 @@
+<table id="bill-table">
+  <thead>
+    <tr>
+      <th>Jurisdiction</th>
+      <th>Bill</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Last action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for bill in bills %}
+    <tr class="{{ 'recent' if bill.id in recent_ids else '' }}">
+      <td>{{ bill.jurisdiction }}</td>
+      <td><a href="/bills/{{ bill.jurisdiction }}/{{ bill.session }}/{{ bill.source_bill_id }}">{{ bill.bill_number }}</a></td>
+      <td>{{ bill.title }}</td>
+      <td>{{ bill.status_text or "-" }}</td>
+      <td>{{ bill.last_action_date or "-" }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5"><em>No bills match the current filters.</em></td></tr>
+    {% endfor %}
+  </tbody>
+</table>

@@ -1,0 +1,41 @@
+from __future__ import annotations
+
+import logging
+
+from app.config import Settings
+from app.ingestion.base import SourceAdapter
+from app.ingestion.california import CaliforniaAdapter
+from app.ingestion.congress_gov import CongressGovAdapter
+from app.ingestion.new_york import NewYorkSenateAdapter
+
+logger = logging.getLogger(__name__)
+
+
+def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
+    """Adapters cheap/fast enough to run on the short `scrape_interval_hours` cadence."""
+    adapters: list[SourceAdapter] = []
+
+    if settings.congress_api_key:
+        adapters.append(
+            CongressGovAdapter(api_key=settings.congress_api_key, base_url=settings.congress_api_base_url)
+        )
+    else:
+        logger.warning("CONGRESS_API_KEY not set; skipping federal adapter")
+
+    if settings.ny_senate_api_key:
+        adapters.append(
+            NewYorkSenateAdapter(api_key=settings.ny_senate_api_key, base_url=settings.ny_senate_api_base_url)
+        )
+    else:
+        logger.warning("NY_SENATE_API_KEY not set; skipping New York adapter")
+
+    return adapters
+
+
+def build_heavy_adapters(settings: Settings) -> list[SourceAdapter]:
+    """Adapters that are expensive (large downloads) and run on their own, longer cadence."""
+    return [CaliforniaAdapter(base_url=settings.ca_pubinfo_base_url)]
+
+
+def build_all_adapters(settings: Settings) -> list[SourceAdapter]:
+    return build_light_adapters(settings) + build_heavy_adapters(settings)

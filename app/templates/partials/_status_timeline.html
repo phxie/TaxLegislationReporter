@@ -1,0 +1,9 @@
+<ol>
+  {% for event in bill.status_events %}
+  <li>
+    <strong>{{ event.event_date }}</strong> &mdash; {{ event.action_text }}
+  </li>
+  {% else %}
+  <li><em>No status history recorded yet.</em></li>
+  {% endfor %}
+</ol>

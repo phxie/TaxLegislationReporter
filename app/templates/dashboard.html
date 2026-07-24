@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+
+<article>
+  <h3>What's new</h3>
+  <div hx-get="/partials/recent-feed" hx-trigger="load" hx-swap="innerHTML">
+    {% include "partials/recent_feed.html" %}
+  </div>
+</article>
+
+<article>
+  <h3>Bills</h3>
+  <form class="filters" hx-get="/partials/bills" hx-target="#bill-table" hx-trigger="change, keyup delay:400ms from:input[name='keyword']" hx-swap="outerHTML">
+    <label>Jurisdiction
+      <select name="jurisdiction">
+        <option value="">All</option>
+        {% for j in jurisdictions %}
+        <option value="{{ j }}" {{ "selected" if filters.jurisdiction == j else "" }}>{{ j }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Keyword
+      <input type="text" name="keyword" value="{{ filters.keyword }}" placeholder="e.g. property tax">
+    </label>
+    <label>From
+      <input type="date" name="date_from" value="{{ filters.date_from or '' }}">
+    </label>
+    <label>To
+      <input type="date" name="date_to" value="{{ filters.date_to or '' }}">
+    </label>
+  </form>
+
+  {% include "partials/bill_table.html" %}
+</article>
+
+{% endblock %}

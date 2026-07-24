@@ -1,0 +1,66 @@
+from __future__ import annotations
+
+import datetime as dt
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
+
+from app.models import Bill, BillChange
+
+
+def list_bills(
+    db: Session,
+    *,
+    jurisdiction: str | None = None,
+    status_text: str | None = None,
+    keyword: str | None = None,
+    date_from: dt.date | None = None,
+    date_to: dt.date | None = None,
+    limit: int = 200,
+) -> list[Bill]:
+    stmt = select(Bill).order_by(Bill.last_action_date.desc().nulls_last())
+
+    if jurisdiction:
+        stmt = stmt.where(Bill.jurisdiction == jurisdiction)
+    if status_text:
+        stmt = stmt.where(Bill.status_text == status_text)
+    if keyword:
+        pattern = f"%{keyword}%"
+        stmt = stmt.where((Bill.title.ilike(pattern)) | (Bill.summary.ilike(pattern)))
+    if date_from:
+        stmt = stmt.where(Bill.last_action_date >= date_from)
+    if date_to:
+        stmt = stmt.where(Bill.last_action_date <= date_to)
+
+    stmt = stmt.limit(limit)
+    return list(db.scalars(stmt).all())
+
+
+def get_bill(db: Session, jurisdiction: str, source_bill_id: str, session: str) -> Bill | None:
+    stmt = (
+        select(Bill)
+        .options(selectinload(Bill.status_events))
+        .where(
+            Bill.jurisdiction == jurisdiction,
+            Bill.source_bill_id == source_bill_id,
+            Bill.session == session,
+        )
+    )
+    return db.scalars(stmt).first()
+
+
+def recent_changes(db: Session, *, since: dt.datetime | None = None, limit: int = 50) -> list[BillChange]:
+    stmt = (
+        select(BillChange)
+        .options(selectinload(BillChange.bill))
+        .order_by(BillChange.detected_at.desc())
+    )
+    if since:
+        stmt = stmt.where(BillChange.detected_at >= since)
+    stmt = stmt.limit(limit)
+    return list(db.scalars(stmt).all())
+
+
+def bill_ids_with_recent_changes(db: Session, *, since: dt.datetime) -> set[int]:
+    stmt = select(BillChange.bill_id).where(BillChange.detected_at >= since).distinct()
+    return set(db.scalars(stmt).all())

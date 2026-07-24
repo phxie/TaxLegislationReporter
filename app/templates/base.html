@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Tax Legislation Reporter{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/pico.min.css">
+  <script src="/static/js/htmx.min.js"></script>
+  <style>
+    .recent { border-left: 3px solid var(--pico-primary); padding-left: 0.5rem; }
+    .filters { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
+    .filters > * { flex: 1 1 160px; }
+    nav.top { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav class="top">
+      <ul><li><strong><a href="/">Tax Legislation Reporter</a></strong></li></ul>
+    </nav>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

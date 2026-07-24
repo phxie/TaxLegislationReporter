@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ bill.jurisdiction }} {{ bill.bill_number }} — Tax Legislation Reporter{% endblock %}
+{% block content %}
+
+<p><a href="/">&larr; Back to dashboard</a></p>
+
+<article>
+  <h2>{{ bill.jurisdiction }} {{ bill.bill_number }}</h2>
+  <p>{{ bill.title }}</p>
+  {% if bill.summary and bill.summary != bill.title %}<p>{{ bill.summary }}</p>{% endif %}
+
+  <table>
+    <tbody>
+      <tr><th>Status</th><td>{{ bill.status_text or "-" }}</td></tr>
+      <tr><th>Session</th><td>{{ bill.session }}</td></tr>
+      <tr><th>Introduced</th><td>{{ bill.introduced_date or "-" }}</td></tr>
+      <tr><th>Last action</th><td>{{ bill.last_action_date or "-" }}</td></tr>
+      <tr><th>Sponsors</th><td>{{ (bill.sponsors_json or []) | join(", ") }}</td></tr>
+      <tr><th>Tax keywords matched</th><td>{{ (bill.tax_keywords_matched or []) | join(", ") }}</td></tr>
+      <tr><th>Source</th><td>{% if bill.source_url %}<a href="{{ bill.source_url }}" target="_blank" rel="noopener">{{ bill.source_url }}</a>{% else %}-{% endif %}</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Status timeline</h3>
+  {% include "partials/_status_timeline.html" %}
+</article>
+
+{% endblock %}
