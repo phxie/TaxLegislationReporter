@@ -9,6 +9,12 @@ from __future__ import annotations
 
 import logging
 import sys
+from pathlib import Path
+
+# Running this file directly (rather than as `python -m`) puts its own
+# directory on sys.path instead of the project root, so `app` wouldn't
+# otherwise be importable.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config import get_settings
 from app.db import SessionLocal
@@ -32,19 +38,18 @@ def main() -> None:
     db = SessionLocal()
     try:
         runs = run_all(db, adapters)
+        for run in runs:
+            logger.info(
+                "source=%s status=%s seen=%d new=%d updated=%d errors=%s",
+                run.source,
+                run.status,
+                run.bills_seen,
+                run.bills_new,
+                run.bills_updated,
+                run.errors_json,
+            )
     finally:
         db.close()
-
-    for run in runs:
-        logger.info(
-            "source=%s status=%s seen=%d new=%d updated=%d errors=%s",
-            run.source,
-            run.status,
-            run.bills_seen,
-            run.bills_new,
-            run.bills_updated,
-            run.errors_json,
-        )
 
 
 if __name__ == "__main__":
