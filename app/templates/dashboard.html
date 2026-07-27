@@ -10,7 +10,8 @@
 
 <article>
   <h3>Bills</h3>
-  <form class="filters" hx-get="/partials/bills" hx-target="#bill-table" hx-trigger="change, keyup delay:400ms from:input[name='keyword']" hx-swap="outerHTML">
+  <form class="filters" hx-get="/partials/bills" hx-target="#bill-table" hx-swap="outerHTML"
+        hx-trigger="change from:select[name='jurisdiction'], change from:input[type='date'], keyup delay:400ms from:input[name='keyword']">
     <label>Jurisdiction
       <select name="jurisdiction">
         <option value="">All</option>
