@@ -15,6 +15,15 @@ router = APIRouter()
 RECENT_WINDOW = dt.timedelta(days=14)
 
 
+def _parse_optional_date(value: str | None) -> dt.date | None:
+    # htmx serializes every form field, so an untouched <input type="date">
+    # arrives as an empty string rather than being omitted -- FastAPI's date
+    # query-param binding rejects "" outright, so parse it ourselves instead.
+    if not value:
+        return None
+    return dt.date.fromisoformat(value)
+
+
 def _filtered_bills(
     db: Session,
     jurisdiction: str | None,
@@ -42,11 +51,15 @@ def dashboard(
     jurisdiction: str | None = Query(default=None),
     status_text: str | None = Query(default=None),
     keyword: str | None = Query(default=None),
-    date_from: dt.date | None = Query(default=None),
-    date_to: dt.date | None = Query(default=None),
+    date_from: str | None = Query(default=None),
+    date_to: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
-    bills, recent_ids = _filtered_bills(db, jurisdiction, status_text, keyword, date_from, date_to)
+    parsed_date_from = _parse_optional_date(date_from)
+    parsed_date_to = _parse_optional_date(date_to)
+    bills, recent_ids = _filtered_bills(
+        db, jurisdiction, status_text, keyword, parsed_date_from, parsed_date_to
+    )
     recent_changes = repository.recent_changes(db, since=dt.datetime.now(dt.UTC) - RECENT_WINDOW)
 
     return templates.TemplateResponse(
@@ -61,8 +74,8 @@ def dashboard(
                 "jurisdiction": jurisdiction or "",
                 "status_text": status_text or "",
                 "keyword": keyword or "",
-                "date_from": date_from,
-                "date_to": date_to,
+                "date_from": parsed_date_from,
+                "date_to": parsed_date_to,
             },
         },
     )
@@ -74,11 +87,18 @@ def bills_partial(
     jurisdiction: str | None = Query(default=None),
     status_text: str | None = Query(default=None),
     keyword: str | None = Query(default=None),
-    date_from: dt.date | None = Query(default=None),
-    date_to: dt.date | None = Query(default=None),
+    date_from: str | None = Query(default=None),
+    date_to: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
-    bills, recent_ids = _filtered_bills(db, jurisdiction, status_text, keyword, date_from, date_to)
+    bills, recent_ids = _filtered_bills(
+        db,
+        jurisdiction,
+        status_text,
+        keyword,
+        _parse_optional_date(date_from),
+        _parse_optional_date(date_to),
+    )
     return templates.TemplateResponse(
         request,
         "partials/bill_table.html",
