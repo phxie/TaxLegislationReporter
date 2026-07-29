@@ -6,6 +6,7 @@
       <th>Title</th>
       <th>Status</th>
       <th>Last action</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
@@ -16,9 +17,10 @@
       <td>{{ bill.title }}</td>
       <td>{{ bill.status_text or "-" }}</td>
       <td>{{ bill.last_action_date or "-" }}</td>
+      <td>{{ bill.source_label }}</td>
     </tr>
     {% else %}
-    <tr><td colspan="5"><em>No bills match the current filters.</em></td></tr>
+    <tr><td colspan="6"><em>No bills match the current filters.</em></td></tr>
     {% endfor %}
   </tbody>
 </table>

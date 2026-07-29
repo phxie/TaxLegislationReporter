@@ -81,6 +81,7 @@ def test_fetch_updates_filters_and_normalizes_tax_relevant_bill():
     assert bill.source_bill_id == "hr1234"
     assert bill.session == "119"
     assert bill.bill_number == "HR 1234"
+    assert bill.source_label == "Congress.gov"
     assert bill.tax_keywords_matched == ["policy_area:taxation"]
     assert bill.sponsors == ["Rep. Example"]
     assert len(bill.status_events) == 2

@@ -128,6 +128,7 @@ class NewYorkSenateAdapter:
             session=str(session),
             bill_number=print_no,
             title=title,
+            source_label="NY Senate Open Legislation API",
             summary=summary,
             sponsors=sponsors,
             status_text=status.get("statusDesc"),

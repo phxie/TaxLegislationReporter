@@ -80,5 +80,6 @@ def test_fetch_updates_filters_and_normalizes_tax_relevant_bill():
     assert bill.source_bill_id == "S1234"
     assert bill.session == "2025"
     assert bill.sponsors == ["Sen. Example"]
+    assert bill.source_label == "NY Senate Open Legislation API"
     assert "tax" in bill.tax_keywords_matched
     assert len(bill.status_events) == 2

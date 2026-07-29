@@ -36,6 +36,9 @@ class Bill(Base):
     bill_number: Mapped[str]
 
     title: Mapped[str]
+    # Human-readable name of the originating system (e.g. "Congress.gov"),
+    # as opposed to `jurisdiction`, which is the short internal code (e.g. "FEDERAL").
+    source_label: Mapped[str]
     summary: Mapped[str | None] = mapped_column(default=None)
     sponsors_json: Mapped[list | None] = mapped_column(JSONB, default=None)
 

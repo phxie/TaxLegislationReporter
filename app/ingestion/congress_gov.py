@@ -124,6 +124,7 @@ class CongressGovAdapter:
             session=str(congress),
             bill_number=f"{bill_type.upper()} {number}",
             title=title,
+            source_label="Congress.gov",
             summary=None,
             sponsors=sponsors,
             status_text=latest_action.get("text"),

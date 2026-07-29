@@ -238,6 +238,7 @@ class CaliforniaAdapter:
             session=bill.get("session_year") or "",
             bill_number=bill_number,
             title=subject or bill_number,
+            source_label="California Legislative Information (PUBINFO)",
             summary=subject,
             sponsors=sponsors,
             status_text=bill.get("current_status"),

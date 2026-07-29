@@ -42,6 +42,7 @@ def apply_bill(db: Session, normalized: NormalizedBill, *, ingestion_run_id: int
             session=normalized.session,
             bill_number=normalized.bill_number,
             title=normalized.title,
+            source_label=normalized.source_label,
             summary=normalized.summary,
             sponsors_json=normalized.sponsors,
             status_text=normalized.status_text,
@@ -78,6 +79,7 @@ def apply_bill(db: Session, normalized: NormalizedBill, *, ingestion_run_id: int
             setattr(existing, field_name, new_value)
 
     existing.sponsors_json = normalized.sponsors
+    existing.source_label = normalized.source_label
     existing.tax_keywords_matched = normalized.tax_keywords_matched
     existing.raw_source_payload = normalized.raw_source_payload
     existing.last_seen_at = now

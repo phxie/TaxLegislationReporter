@@ -17,7 +17,8 @@
       <tr><th>Last action</th><td>{{ bill.last_action_date or "-" }}</td></tr>
       <tr><th>Sponsors</th><td>{{ (bill.sponsors_json or []) | join(", ") }}</td></tr>
       <tr><th>Tax keywords matched</th><td>{{ (bill.tax_keywords_matched or []) | join(", ") }}</td></tr>
-      <tr><th>Source</th><td>{% if bill.source_url %}<a href="{{ bill.source_url }}" target="_blank" rel="noopener">{{ bill.source_url }}</a>{% else %}-{% endif %}</td></tr>
+      <tr><th>Source</th><td>{{ bill.source_label }}</td></tr>
+      <tr><th>Source URL</th><td>{% if bill.source_url %}<a href="{{ bill.source_url }}" target="_blank" rel="noopener">{{ bill.source_url }}</a>{% else %}-{% endif %}</td></tr>
     </tbody>
   </table>
 

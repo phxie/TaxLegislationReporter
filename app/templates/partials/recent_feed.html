@@ -7,7 +7,7 @@
       {{ change.bill.jurisdiction }} {{ change.bill.bill_number }}
     </a>
     {% if change.field_name %}({{ change.field_name }}: {{ change.old_value or "—" }} &rarr; {{ change.new_value }}){% endif %}
-    <small>{{ change.detected_at.strftime("%Y-%m-%d %H:%M") }}</small>
+    <small>via {{ change.bill.source_label }} &middot; {{ change.detected_at.strftime("%Y-%m-%d %H:%M") }}</small>
   </li>
   {% else %}
   <li><em>No changes detected yet.</em></li>

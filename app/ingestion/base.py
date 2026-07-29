@@ -21,6 +21,9 @@ class NormalizedBill:
     session: str
     bill_number: str
     title: str
+    # Human-readable name of the originating system (e.g. "Congress.gov"),
+    # as opposed to `jurisdiction`, which is the short internal code (e.g. "FEDERAL").
+    source_label: str
     summary: str | None = None
     sponsors: list[str] = field(default_factory=list)
     status_text: str | None = None

@@ -89,6 +89,7 @@ def test_fetch_updates_filters_via_taxlevy_and_keyword():
     assert bill.source_bill_id == "202520260AB100"
     assert bill.bill_number == "AB 100"
     assert bill.title == "Income taxes: credits: child care."
+    assert bill.source_label == "California Legislative Information (PUBINFO)"
     assert bill.tax_keywords_matched == ["taxlevy_flag"]
     assert bill.sponsors == ["Smith"]
     assert len(bill.status_events) == 2
