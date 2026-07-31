@@ -3,6 +3,7 @@
 Usage: uv run scripts/run_scrape_once.py [source ...]
        e.g. uv run scripts/run_scrape_once.py FEDERAL
             uv run scripts/run_scrape_once.py CA NY
+            uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY
 """
 
 from __future__ import annotations
@@ -18,36 +19,45 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config import get_settings
 from app.db import SessionLocal
-from app.ingestion.pipeline import run_all
-from app.ingestion.registry import build_all_adapters
+from app.ingestion.pipeline import run_all, run_all_publications
+from app.ingestion.registry import build_all_adapters, build_publication_adapters
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
+def _log_run(run) -> None:
+    logger.info(
+        "source=%s status=%s seen=%d new=%d updated=%d errors=%s",
+        run.source,
+        run.status,
+        run.bills_seen,
+        run.bills_new,
+        run.bills_updated,
+        run.errors_json,
+    )
+
+
 def main() -> None:
     requested = {s.upper() for s in sys.argv[1:]}
-    adapters = build_all_adapters(get_settings())
-    if requested:
-        adapters = [a for a in adapters if a.source_name in requested]
+    settings = get_settings()
 
-    if not adapters:
+    bill_adapters = build_all_adapters(settings)
+    publication_adapters = build_publication_adapters(settings)
+    if requested:
+        bill_adapters = [a for a in bill_adapters if a.source_name in requested]
+        publication_adapters = [a for a in publication_adapters if a.source_name in requested]
+
+    if not bill_adapters and not publication_adapters:
         logger.warning("No adapters configured/selected; nothing to do")
         return
 
     db = SessionLocal()
     try:
-        runs = run_all(db, adapters)
-        for run in runs:
-            logger.info(
-                "source=%s status=%s seen=%d new=%d updated=%d errors=%s",
-                run.source,
-                run.status,
-                run.bills_seen,
-                run.bills_new,
-                run.bills_updated,
-                run.errors_json,
-            )
+        for run in run_all(db, bill_adapters):
+            _log_run(run)
+        for run in run_all_publications(db, publication_adapters):
+            _log_run(run)
     finally:
         db.close()
 

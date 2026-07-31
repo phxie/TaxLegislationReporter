@@ -5,7 +5,7 @@ import datetime as dt
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Bill, BillChange
+from app.models import Bill, BillChange, Publication
 
 
 def list_bills(
@@ -64,3 +64,29 @@ def recent_changes(db: Session, *, since: dt.datetime | None = None, limit: int 
 def bill_ids_with_recent_changes(db: Session, *, since: dt.datetime) -> set[int]:
     stmt = select(BillChange.bill_id).where(BillChange.detected_at >= since).distinct()
     return set(db.scalars(stmt).all())
+
+
+def list_publications(
+    db: Session,
+    *,
+    keyword: str | None = None,
+    date_from: dt.date | None = None,
+    date_to: dt.date | None = None,
+    limit: int = 200,
+) -> list[Publication]:
+    stmt = select(Publication).order_by(Publication.published_date.desc().nulls_last())
+
+    if keyword:
+        pattern = f"%{keyword}%"
+        stmt = stmt.where((Publication.title.ilike(pattern)) | (Publication.summary.ilike(pattern)))
+    if date_from:
+        stmt = stmt.where(Publication.published_date >= date_from)
+    if date_to:
+        stmt = stmt.where(Publication.published_date <= date_to)
+
+    stmt = stmt.limit(limit)
+    return list(db.scalars(stmt).all())
+
+
+def get_publication(db: Session, publication_id: int) -> Publication | None:
+    return db.get(Publication, publication_id)

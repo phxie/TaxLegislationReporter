@@ -7,6 +7,8 @@ from app.ingestion.base import SourceAdapter
 from app.ingestion.california import CaliforniaAdapter
 from app.ingestion.congress_gov import CongressGovAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
+from app.ingestion.publications_base import PublicationSourceAdapter
+from app.ingestion.pwc_tax_library import PwcTaxLibraryAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -39,3 +41,7 @@ def build_heavy_adapters(settings: Settings) -> list[SourceAdapter]:
 
 def build_all_adapters(settings: Settings) -> list[SourceAdapter]:
     return build_light_adapters(settings) + build_heavy_adapters(settings)
+
+
+def build_publication_adapters(settings: Settings) -> list[PublicationSourceAdapter]:
+    return [PwcTaxLibraryAdapter(base_url=settings.pwc_tax_library_base_url)]

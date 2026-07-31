@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Publications — Tax Legislation Reporter{% endblock %}
+{% block content %}
+
+<article>
+  <h3>Publications</h3>
+  <form class="filters" hx-get="/publications/partials/list" hx-target="#publication-table" hx-swap="outerHTML"
+        hx-trigger="change from:input[type='date'], keyup delay:400ms from:input[name='keyword']">
+    <label>Keyword
+      <input type="text" name="keyword" value="{{ filters.keyword }}" placeholder="e.g. GILTI">
+    </label>
+    <label>From
+      <input type="date" name="date_from" value="{{ filters.date_from or '' }}">
+    </label>
+    <label>To
+      <input type="date" name="date_to" value="{{ filters.date_to or '' }}">
+    </label>
+  </form>
+
+  {% include "partials/publication_table.html" %}
+</article>
+
+{% endblock %}

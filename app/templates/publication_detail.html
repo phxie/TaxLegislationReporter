@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ publication.title }} — Tax Legislation Reporter{% endblock %}
+{% block content %}
+
+<p><a href="/publications">&larr; Back to publications</a></p>
+
+<article>
+  <h2>{{ publication.title }}</h2>
+  {% if publication.summary %}<p>{{ publication.summary }}</p>{% endif %}
+
+  <table>
+    <tbody>
+      <tr><th>Published</th><td>{{ publication.published_date or "-" }}</td></tr>
+      <tr><th>Type</th><td>{{ publication.content_type or "-" }}</td></tr>
+      <tr><th>Topics</th><td>{{ (publication.topic_tags_json or []) | join(", ") }}</td></tr>
+      <tr><th>Tax keywords matched</th><td>{{ (publication.tax_keywords_matched or []) | join(", ") }}</td></tr>
+      <tr><th>Source</th><td>{{ publication.source_label }}</td></tr>
+      <tr><th>Source URL</th><td><a href="{{ publication.url }}" target="_blank" rel="noopener">{{ publication.url }}</a></td></tr>
+    </tbody>
+  </table>
+</article>
+
+{% endblock %}

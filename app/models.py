@@ -17,6 +17,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
 
 JURISDICTIONS = ("FEDERAL", "CA", "NY")
+PUBLICATION_SOURCES = ("PWC_TAX_LIBRARY",)
 
 
 class Bill(Base):
@@ -115,6 +116,56 @@ class BillChange(Base):
     )
 
     bill: Mapped[Bill] = relationship(back_populates="changes")
+
+
+class Publication(Base):
+    """A non-legislative content item (e.g. a PwC Tax Library article).
+
+    Deliberately separate from `Bill`: publications have no jurisdiction,
+    session, bill number, sponsors, or status timeline, and are effectively
+    immutable once published, so there's no publication-equivalent of
+    `BillChange`/`BillStatusEvent` -- "what's new" just means
+    `first_seen_at >= since`.
+    """
+
+    __tablename__ = "publications"
+    __table_args__ = (
+        UniqueConstraint("source", "url", name="uq_publication_natural_key"),
+        CheckConstraint(
+            f"source IN ({', '.join(repr(s) for s in PUBLICATION_SOURCES)})",
+            name="ck_publication_source",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source: Mapped[str] = mapped_column(index=True)
+    # Human-readable name of the originating system (e.g. "PwC Tax Library"),
+    # as opposed to `source`, which is the short internal code.
+    source_label: Mapped[str]
+    url: Mapped[str]
+
+    title: Mapped[str]
+    summary: Mapped[str | None] = mapped_column(default=None)
+    published_date: Mapped[dt.date | None] = mapped_column(Date, default=None)
+    topic_tags_json: Mapped[list | None] = mapped_column(JSONB, default=None)
+    content_type: Mapped[str | None] = mapped_column(default=None)
+
+    is_tax_relevant: Mapped[bool] = mapped_column(default=True)
+    tax_keywords_matched: Mapped[list | None] = mapped_column(JSONB, default=None)
+    raw_source_payload: Mapped[dict | None] = mapped_column(JSONB, default=None)
+
+    first_seen_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    last_seen_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class IngestionRun(Base):

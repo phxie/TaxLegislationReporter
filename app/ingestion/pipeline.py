@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.ingestion.base import SourceAdapter
 from app.ingestion.diff import apply_bill
+from app.ingestion.publications_base import PublicationSourceAdapter
+from app.ingestion.publications_diff import apply_publication
 from app.models import IngestionRun
 
 logger = logging.getLogger(__name__)
@@ -69,3 +71,51 @@ def run_source(db: Session, adapter: SourceAdapter) -> IngestionRun:
 
 def run_all(db: Session, adapters: list[SourceAdapter]) -> list[IngestionRun]:
     return [run_source(db, adapter) for adapter in adapters]
+
+
+def run_publication_source(db: Session, adapter: PublicationSourceAdapter) -> IngestionRun:
+    run = IngestionRun(source=adapter.source_name, status="running")
+    db.add(run)
+    db.commit()
+
+    items_seen = 0
+    items_new = 0
+    items_updated = 0
+    errors: list[dict] = []
+
+    try:
+        for normalized in adapter.fetch_updates(since=None):
+            items_seen += 1
+            try:
+                _, is_new = apply_publication(db, normalized)
+                db.commit()
+                if is_new:
+                    items_new += 1
+                else:
+                    items_updated += 1
+            except Exception as exc:  # noqa: BLE001
+                db.rollback()
+                logger.exception("Failed to apply publication %s", normalized.url)
+                errors.append({"publication": normalized.url, "error": str(exc)})
+
+        run.status = "partial" if errors else "success"
+    except Exception as exc:  # noqa: BLE001
+        db.rollback()
+        logger.exception("Ingestion run failed for source %s", adapter.source_name)
+        run.status = "failed"
+        errors.append({"error": str(exc)})
+
+    run.finished_at = dt.datetime.now(dt.UTC)
+    run.bills_seen = items_seen
+    run.bills_new = items_new
+    run.bills_updated = items_updated
+    run.errors_json = errors or None
+    db.add(run)
+    db.commit()
+    return run
+
+
+def run_all_publications(
+    db: Session, adapters: list[PublicationSourceAdapter]
+) -> list[IngestionRun]:
+    return [run_publication_source(db, adapter) for adapter in adapters]

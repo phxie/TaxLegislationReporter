@@ -15,10 +15,14 @@ class Settings(BaseSettings):
     # California only publishes a full ~1GB session snapshot once a day, so it
     # gets its own (longer) interval rather than sharing scrape_interval_hours.
     ca_scrape_interval_hours: int = 24
+    # Articles publish at most a few times/week, so this also gets its own,
+    # longer interval rather than sharing scrape_interval_hours.
+    pwc_scrape_interval_hours: int = 24
 
     congress_api_base_url: str = "https://api.congress.gov/v3"
     ny_senate_api_base_url: str = "https://legislation.nysenate.gov/api/3"
     ca_pubinfo_base_url: str = "https://downloads.leginfo.legislature.ca.gov"
+    pwc_tax_library_base_url: str = "https://www.pwc.com"
 
 
 @lru_cache
