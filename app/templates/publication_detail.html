@@ -12,6 +12,7 @@
     <tbody>
       <tr><th>Published</th><td>{{ publication.published_date or "-" }}</td></tr>
       <tr><th>Type</th><td>{{ publication.content_type or "-" }}</td></tr>
+      <tr><th>Jurisdiction</th><td>{{ publication.relevant_jurisdiction or "-" }}</td></tr>
       <tr><th>Topics</th><td>{{ (publication.topic_tags_json or []) | join(", ") }}</td></tr>
       <tr><th>Tax keywords matched</th><td>{{ (publication.tax_keywords_matched or []) | join(", ") }}</td></tr>
       <tr><th>Source</th><td>{{ publication.source_label }}</td></tr>

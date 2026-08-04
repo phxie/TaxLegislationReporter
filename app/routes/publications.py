@@ -24,6 +24,7 @@ def _parse_optional_date(value: str | None) -> dt.date | None:
 @router.get("/publications")
 def publications(
     request: Request,
+    relevant_jurisdiction: str | None = Query(default=None),
     keyword: str | None = Query(default=None),
     date_from: str | None = Query(default=None),
     date_to: str | None = Query(default=None),
@@ -32,7 +33,11 @@ def publications(
     parsed_date_from = _parse_optional_date(date_from)
     parsed_date_to = _parse_optional_date(date_to)
     items = repository.list_publications(
-        db, keyword=keyword or None, date_from=parsed_date_from, date_to=parsed_date_to
+        db,
+        relevant_jurisdiction=relevant_jurisdiction or None,
+        keyword=keyword or None,
+        date_from=parsed_date_from,
+        date_to=parsed_date_to,
     )
 
     return templates.TemplateResponse(
@@ -40,7 +45,9 @@ def publications(
         "publications.html",
         {
             "publications": items,
+            "jurisdictions": repository.distinct_publication_jurisdictions(db),
             "filters": {
+                "relevant_jurisdiction": relevant_jurisdiction or "",
                 "keyword": keyword or "",
                 "date_from": parsed_date_from,
                 "date_to": parsed_date_to,
@@ -52,6 +59,7 @@ def publications(
 @router.get("/publications/partials/list")
 def publications_list_partial(
     request: Request,
+    relevant_jurisdiction: str | None = Query(default=None),
     keyword: str | None = Query(default=None),
     date_from: str | None = Query(default=None),
     date_to: str | None = Query(default=None),
@@ -59,6 +67,7 @@ def publications_list_partial(
 ):
     items = repository.list_publications(
         db,
+        relevant_jurisdiction=relevant_jurisdiction or None,
         keyword=keyword or None,
         date_from=_parse_optional_date(date_from),
         date_to=_parse_optional_date(date_to),

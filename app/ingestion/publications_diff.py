@@ -35,6 +35,7 @@ def apply_publication(db: Session, normalized: NormalizedPublication) -> tuple[P
             published_date=normalized.published_date,
             topic_tags_json=normalized.topic_tags,
             content_type=normalized.content_type,
+            relevant_jurisdiction=normalized.relevant_jurisdiction,
             is_tax_relevant=True,
             tax_keywords_matched=normalized.tax_keywords_matched,
             raw_source_payload=normalized.raw_source_payload,
@@ -50,6 +51,7 @@ def apply_publication(db: Session, normalized: NormalizedPublication) -> tuple[P
     existing.published_date = normalized.published_date
     existing.topic_tags_json = normalized.topic_tags
     existing.content_type = normalized.content_type
+    existing.relevant_jurisdiction = normalized.relevant_jurisdiction
     existing.tax_keywords_matched = normalized.tax_keywords_matched
     existing.raw_source_payload = normalized.raw_source_payload
     existing.last_seen_at = now

@@ -21,12 +21,17 @@ California only publishes a full session snapshot once a day (its smaller daily 
 omits bill titles/subjects), so it's ingested on its own, longer schedule rather than the
 shared interval used for the other sources.
 
-**Publications** (articles/insights — not legislation, no jurisdiction or status; kept as a
+**Publications** (articles/insights — not legislation, no status timeline; kept as a
 separate concept from bills, see `app/models.py`'s `Publication`):
 
 | Source | Access | Notes |
 | --- | --- | --- |
 | [PwC Tax Library](https://www.pwc.com/us/en/services/tax/library.html) | No auth required | Undocumented AEM endpoint (see `app/ingestion/pwc_tax_library.py`) — no official API/RSS exists, so this is more fragile to upstream site changes than the structured legislation sources above |
+
+Each publication also gets a best-effort `relevant_jurisdiction` (a US state, "Federal",
+"International", or "Multistate") inferred from its title/summary text via keyword matching
+(see `app/ingestion/jurisdiction_detect.py`) — informational, not authoritative, since PwC's
+own metadata doesn't encode a specific jurisdiction.
 
 ## Requirements
 

@@ -24,7 +24,7 @@ PAGE_1 = [
 PAGE_2 = [
     {
         "href": "https://www.pwc.com/us/en/services/tax/library/article-two.html",
-        "title": "State tax update",
+        "title": "Texas enacts franchise tax update",
         "text": "A summary about state tax.",
         "publishDate": "July 01, 2026",
         "tags": ["pwc-xx:content-type/publication"],
@@ -48,7 +48,8 @@ def test_fetch_updates_paginates_and_normalizes():
     assert results[0].content_type == "Publication"
     assert "tax" in results[0].tax_keywords_matched
     assert results[1].content_type == "Podcast"
-    assert results[2].title == "State tax update"
+    assert results[2].title == "Texas enacts franchise tax update"
+    assert results[2].relevant_jurisdiction == "Texas"
 
 
 def test_fetch_updates_stops_when_page_empty():

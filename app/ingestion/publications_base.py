@@ -18,6 +18,7 @@ class NormalizedPublication:
     published_date: dt.date | None = None
     topic_tags: list[str] = field(default_factory=list)
     content_type: str | None = None
+    relevant_jurisdiction: str | None = None
     tax_keywords_matched: list[str] = field(default_factory=list)
     raw_source_payload: dict | None = None
 

@@ -8,6 +8,7 @@ from collections.abc import Iterator
 import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
+from app.ingestion.jurisdiction_detect import detect_relevant_jurisdiction
 from app.ingestion.publications_base import NormalizedPublication
 from app.ingestion.tax_filter import matching_keywords
 
@@ -120,6 +121,7 @@ class PwcTaxLibraryAdapter:
             published_date=published_date,
             topic_tags=tags,
             content_type=content_type,
+            relevant_jurisdiction=detect_relevant_jurisdiction(title, summary),
             tax_keywords_matched=matching_keywords(title, summary),
             raw_source_payload=element,
         )

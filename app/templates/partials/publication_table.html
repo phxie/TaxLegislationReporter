@@ -5,6 +5,7 @@
       <th>Title</th>
       <th>Summary</th>
       <th>Type</th>
+      <th>Jurisdiction</th>
       <th>Source</th>
     </tr>
   </thead>
@@ -15,10 +16,11 @@
       <td><a href="/publications/{{ pub.id }}">{{ pub.title }}</a></td>
       <td>{{ pub.summary or "-" }}</td>
       <td>{{ pub.content_type or "-" }}</td>
+      <td>{{ pub.relevant_jurisdiction or "-" }}</td>
       <td>{{ pub.source_label }}</td>
     </tr>
     {% else %}
-    <tr><td colspan="5"><em>No publications match the current filters.</em></td></tr>
+    <tr><td colspan="6"><em>No publications match the current filters.</em></td></tr>
     {% endfor %}
   </tbody>
 </table>

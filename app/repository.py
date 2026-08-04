@@ -69,6 +69,7 @@ def bill_ids_with_recent_changes(db: Session, *, since: dt.datetime) -> set[int]
 def list_publications(
     db: Session,
     *,
+    relevant_jurisdiction: str | None = None,
     keyword: str | None = None,
     date_from: dt.date | None = None,
     date_to: dt.date | None = None,
@@ -76,6 +77,8 @@ def list_publications(
 ) -> list[Publication]:
     stmt = select(Publication).order_by(Publication.published_date.desc().nulls_last())
 
+    if relevant_jurisdiction:
+        stmt = stmt.where(Publication.relevant_jurisdiction == relevant_jurisdiction)
     if keyword:
         pattern = f"%{keyword}%"
         stmt = stmt.where((Publication.title.ilike(pattern)) | (Publication.summary.ilike(pattern)))
@@ -90,3 +93,13 @@ def list_publications(
 
 def get_publication(db: Session, publication_id: int) -> Publication | None:
     return db.get(Publication, publication_id)
+
+
+def distinct_publication_jurisdictions(db: Session) -> list[str]:
+    stmt = (
+        select(Publication.relevant_jurisdiction)
+        .where(Publication.relevant_jurisdiction.is_not(None))
+        .distinct()
+        .order_by(Publication.relevant_jurisdiction)
+    )
+    return list(db.scalars(stmt).all())
