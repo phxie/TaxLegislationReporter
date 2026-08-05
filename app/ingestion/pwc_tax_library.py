@@ -9,7 +9,7 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.ingestion.jurisdiction_detect import detect_relevant_jurisdiction
-from app.ingestion.publications_base import NormalizedPublication
+from app.ingestion.publications_base import NormalizedPublication, PublicationScrapeError
 from app.ingestion.tax_filter import matching_keywords
 
 logger = logging.getLogger(__name__)
@@ -24,16 +24,6 @@ COLLECTION_PATH = (
     "content-free-container-1/section_65997272/collection_v2.rebrand-filter-dynamic.html"
 )
 CURRENT_PAGE_PATH = "/content/pwc/us/en/services/tax/library"
-
-
-class PublicationScrapeError(RuntimeError):
-    """Raised when the source reports items exist but none could be extracted.
-
-    This is the dangerous failure mode for an undocumented, scraped endpoint:
-    a response-shape change would still return HTTP 200, so it must not be
-    reported as "success, 0 new" -- that's indistinguishable from a genuinely
-    quiet week.
-    """
 
 
 class PwcTaxLibraryAdapter:

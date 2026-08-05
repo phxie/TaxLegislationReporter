@@ -3,7 +3,7 @@
 Usage: uv run scripts/run_scrape_once.py [source ...]
        e.g. uv run scripts/run_scrape_once.py FEDERAL
             uv run scripts/run_scrape_once.py CA NY
-            uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY
+            uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS
 """
 
 from __future__ import annotations

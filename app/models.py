@@ -15,10 +15,9 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-from app.ingestion.jurisdiction_detect import RELEVANT_JURISDICTIONS
 
 JURISDICTIONS = ("FEDERAL", "CA", "NY")
-PUBLICATION_SOURCES = ("PWC_TAX_LIBRARY",)
+PUBLICATION_SOURCES = ("PWC_TAX_LIBRARY", "EY_TAX_ALERTS")
 
 
 class Bill(Base):
@@ -136,11 +135,11 @@ class Publication(Base):
             f"source IN ({', '.join(repr(s) for s in PUBLICATION_SOURCES)})",
             name="ck_publication_source",
         ),
-        CheckConstraint(
-            "relevant_jurisdiction IS NULL OR relevant_jurisdiction IN ("
-            f"{', '.join(repr(j) for j in RELEVANT_JURISDICTIONS)})",
-            name="ck_publication_relevant_jurisdiction",
-        ),
+        # No CHECK constraint on relevant_jurisdiction: PwC (no native jurisdiction
+        # data) is limited to the US-state/Federal/International/Multistate
+        # heuristic in jurisdiction_detect.py, but EY provides its own authoritative,
+        # global jurisdiction taxonomy (e.g. "Guinea", "European Union") that a
+        # fixed enum can't practically cover.
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -155,10 +154,10 @@ class Publication(Base):
     published_date: Mapped[dt.date | None] = mapped_column(Date, default=None)
     topic_tags_json: Mapped[list | None] = mapped_column(JSONB, default=None)
     content_type: Mapped[str | None] = mapped_column(default=None)
-    # Best-effort "which jurisdiction is this article about" (a US state,
-    # "Federal", "International", or "Multistate") inferred from the
-    # title/summary text -- see app/ingestion/jurisdiction_detect.py.
-    # Informational, not authoritative.
+    # "Which jurisdiction is this article about" -- authoritative when the
+    # source provides its own (e.g. EY's jurisdiction taxonomy), otherwise a
+    # best-effort heuristic inferred from title/summary text (PwC; see
+    # app/ingestion/jurisdiction_detect.py). Informational either way.
     relevant_jurisdiction: Mapped[str | None] = mapped_column(index=True, default=None)
 
     is_tax_relevant: Mapped[bool] = mapped_column(default=True)

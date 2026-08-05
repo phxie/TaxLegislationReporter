@@ -75,7 +75,7 @@ def build_scheduler(settings: Settings) -> BackgroundScheduler:
     scheduler.add_job(
         _run_publication_sources,
         "interval",
-        hours=settings.pwc_scrape_interval_hours,
+        hours=settings.publications_scrape_interval_hours,
         args=[settings],
         id="ingest_publication_sources",
         coalesce=True,

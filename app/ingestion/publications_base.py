@@ -32,3 +32,13 @@ class PublicationSourceAdapter(Protocol):
         `since=None` means "full backfill" (e.g. first run for this source).
         """
         ...
+
+
+class PublicationScrapeError(RuntimeError):
+    """Raised when a source reports/implies items exist but none could be extracted.
+
+    This is the dangerous failure mode for a scraped/undocumented endpoint: a
+    response-shape change would still return HTTP 200, so it must not be
+    reported as "success, 0 new" -- that's indistinguishable from a genuinely
+    quiet period.
+    """

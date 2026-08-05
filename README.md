@@ -27,11 +27,13 @@ separate concept from bills, see `app/models.py`'s `Publication`):
 | Source | Access | Notes |
 | --- | --- | --- |
 | [PwC Tax Library](https://www.pwc.com/us/en/services/tax/library.html) | No auth required | Undocumented AEM endpoint (see `app/ingestion/pwc_tax_library.py`) — no official API/RSS exists, so this is more fragile to upstream site changes than the structured legislation sources above |
+| [EY Tax Alerts](https://www.ey.com/en_gl/technical/tax-alerts) | No auth required | Undocumented search-API endpoint (see `app/ingestion/ey_tax_alerts.py`); the endpoint spans EY's *entire* global content index (~3,000 items, mostly non-tax "Immigration" alerts), so this pulls a bounded recent window and filters using EY's own `category_label` rather than trusting the page scope alone |
 
-Each publication also gets a best-effort `relevant_jurisdiction` (a US state, "Federal",
-"International", or "Multistate") inferred from its title/summary text via keyword matching
-(see `app/ingestion/jurisdiction_detect.py`) — informational, not authoritative, since PwC's
-own metadata doesn't encode a specific jurisdiction.
+Each publication gets a `relevant_jurisdiction`: authoritative when the source provides its
+own (EY tags every item with a real jurisdiction, e.g. "Guinea", "European Union"), otherwise
+a best-effort heuristic inferred from title/summary text via keyword matching (PwC; see
+`app/ingestion/jurisdiction_detect.py`, limited to US states + "Federal"/"International"/
+"Multistate"). Informational either way, not guaranteed accurate.
 
 ## Requirements
 
@@ -82,7 +84,7 @@ Or scope it to specific sources:
 ```
 uv run scripts/run_scrape_once.py FEDERAL
 uv run scripts/run_scrape_once.py CA NY
-uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY
+uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS
 ```
 
 Start the dashboard:
@@ -93,8 +95,8 @@ uv run uvicorn app.main:app --reload
 
 Then open http://127.0.0.1:8000 (bills) or http://127.0.0.1:8000/publications. The app
 also runs ingestion automatically in the background on a schedule
-(`SCRAPE_INTERVAL_HOURS` / `CA_SCRAPE_INTERVAL_HOURS` / `PWC_SCRAPE_INTERVAL_HOURS` in
-`.env`) while it's running.
+(`SCRAPE_INTERVAL_HOURS` / `CA_SCRAPE_INTERVAL_HOURS` / `PUBLICATIONS_SCRAPE_INTERVAL_HOURS`
+in `.env`) while it's running.
 
 ## Development
 
@@ -129,7 +131,9 @@ app/
 │   ├── diff.py                  # Bill insert/update + change detection
 │   ├── publications_base.py      # NormalizedPublication / PublicationSourceAdapter protocol
 │   ├── publications_diff.py       # Publication insert/update (no change-log — see Sources above)
+│   ├── jurisdiction_detect.py      # Best-effort jurisdiction heuristic (used by PwC)
 │   ├── pwc_tax_library.py
+│   ├── ey_tax_alerts.py
 │   ├── pipeline.py                 # run_all()/run_all_publications() — ingestion entry points
 │   └── registry.py                 # Builds adapters from Settings
 ├── routes/               # dashboard, bills, feed, publications
