@@ -28,12 +28,15 @@ separate concept from bills, see `app/models.py`'s `Publication`):
 | --- | --- | --- |
 | [PwC Tax Library](https://www.pwc.com/us/en/services/tax/library.html) | No auth required | Undocumented AEM endpoint (see `app/ingestion/pwc_tax_library.py`) — no official API/RSS exists, so this is more fragile to upstream site changes than the structured legislation sources above |
 | [EY Tax Alerts](https://www.ey.com/en_gl/technical/tax-alerts) | No auth required | Undocumented search-API endpoint (see `app/ingestion/ey_tax_alerts.py`); the endpoint spans EY's *entire* global content index (~3,000 items, mostly non-tax "Immigration" alerts), so this pulls a bounded recent window and filters using EY's own `category_label` rather than trusting the page scope alone |
+| [KPMG TaxNewsFlash Europe](https://kpmg.com/us/en/taxnewsflash/europe.html) | No auth required | Undocumented per-month AEM "gridlist" JSON endpoints embedded in the page's static HTML (see `app/ingestion/kpmg_taxnewsflash_europe.py`) — the whole page's history (~16 months, ~1,000 items) is re-pulled every run, relying on upsert idempotency like PwC |
 
 Each publication gets a `relevant_jurisdiction`: authoritative when the source provides its
 own (EY tags every item with a real jurisdiction, e.g. "Guinea", "European Union"), otherwise
-a best-effort heuristic inferred from title/summary text via keyword matching (PwC; see
+a best-effort heuristic — PwC infers it from title/summary text via keyword matching (see
 `app/ingestion/jurisdiction_detect.py`, limited to US states + "Federal"/"International"/
-"Multistate"). Informational either way, not guaranteed accurate.
+"Multistate"); KPMG extracts it from its own consistent "Country: ..." title convention (see
+`_extract_jurisdiction` in `kpmg_taxnewsflash_europe.py`), covering European countries plus
+"United Kingdom"/"European Union". Informational either way, not guaranteed accurate.
 
 ## Requirements
 
@@ -84,7 +87,7 @@ Or scope it to specific sources:
 ```
 uv run scripts/run_scrape_once.py FEDERAL
 uv run scripts/run_scrape_once.py CA NY
-uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS
+uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 ```
 
 Start the dashboard:
@@ -134,6 +137,7 @@ app/
 │   ├── jurisdiction_detect.py      # Best-effort jurisdiction heuristic (used by PwC)
 │   ├── pwc_tax_library.py
 │   ├── ey_tax_alerts.py
+│   ├── kpmg_taxnewsflash_europe.py
 │   ├── pipeline.py                 # run_all()/run_all_publications() — ingestion entry points
 │   └── registry.py                 # Builds adapters from Settings
 ├── routes/               # dashboard, bills, feed, publications

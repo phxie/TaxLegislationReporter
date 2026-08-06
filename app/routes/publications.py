@@ -24,6 +24,7 @@ def _parse_optional_date(value: str | None) -> dt.date | None:
 @router.get("/publications")
 def publications(
     request: Request,
+    source: str | None = Query(default=None),
     relevant_jurisdiction: str | None = Query(default=None),
     keyword: str | None = Query(default=None),
     date_from: str | None = Query(default=None),
@@ -34,6 +35,7 @@ def publications(
     parsed_date_to = _parse_optional_date(date_to)
     items = repository.list_publications(
         db,
+        source=source or None,
         relevant_jurisdiction=relevant_jurisdiction or None,
         keyword=keyword or None,
         date_from=parsed_date_from,
@@ -45,8 +47,10 @@ def publications(
         "publications.html",
         {
             "publications": items,
+            "sources": repository.distinct_publication_sources(db),
             "jurisdictions": repository.distinct_publication_jurisdictions(db),
             "filters": {
+                "source": source or "",
                 "relevant_jurisdiction": relevant_jurisdiction or "",
                 "keyword": keyword or "",
                 "date_from": parsed_date_from,
@@ -59,6 +63,7 @@ def publications(
 @router.get("/publications/partials/list")
 def publications_list_partial(
     request: Request,
+    source: str | None = Query(default=None),
     relevant_jurisdiction: str | None = Query(default=None),
     keyword: str | None = Query(default=None),
     date_from: str | None = Query(default=None),
@@ -67,6 +72,7 @@ def publications_list_partial(
 ):
     items = repository.list_publications(
         db,
+        source=source or None,
         relevant_jurisdiction=relevant_jurisdiction or None,
         keyword=keyword or None,
         date_from=_parse_optional_date(date_from),

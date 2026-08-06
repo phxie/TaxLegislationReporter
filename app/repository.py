@@ -69,6 +69,7 @@ def bill_ids_with_recent_changes(db: Session, *, since: dt.datetime) -> set[int]
 def list_publications(
     db: Session,
     *,
+    source: str | None = None,
     relevant_jurisdiction: str | None = None,
     keyword: str | None = None,
     date_from: dt.date | None = None,
@@ -77,6 +78,8 @@ def list_publications(
 ) -> list[Publication]:
     stmt = select(Publication).order_by(Publication.published_date.desc().nulls_last())
 
+    if source:
+        stmt = stmt.where(Publication.source == source)
     if relevant_jurisdiction:
         stmt = stmt.where(Publication.relevant_jurisdiction == relevant_jurisdiction)
     if keyword:
@@ -103,3 +106,13 @@ def distinct_publication_jurisdictions(db: Session) -> list[str]:
         .order_by(Publication.relevant_jurisdiction)
     )
     return list(db.scalars(stmt).all())
+
+
+def distinct_publication_sources(db: Session) -> list[tuple[str, str]]:
+    """Returns (source, source_label) pairs actually present, for a filter dropdown."""
+    stmt = (
+        select(Publication.source, Publication.source_label)
+        .distinct()
+        .order_by(Publication.source_label)
+    )
+    return [(row.source, row.source_label) for row in db.execute(stmt)]

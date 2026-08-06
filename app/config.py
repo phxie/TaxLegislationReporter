@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     ca_pubinfo_base_url: str = "https://downloads.leginfo.legislature.ca.gov"
     pwc_tax_library_base_url: str = "https://www.pwc.com"
     ey_tax_alerts_base_url: str = "https://api-search.ey.com"
+    kpmg_taxnewsflash_europe_base_url: str = "https://kpmg.com"
 
 
 @lru_cache

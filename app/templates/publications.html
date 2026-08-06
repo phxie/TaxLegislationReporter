@@ -5,7 +5,15 @@
 <article>
   <h3>Publications</h3>
   <form class="filters" hx-get="/publications/partials/list" hx-target="#publication-table" hx-swap="outerHTML"
-        hx-trigger="change from:select[name='relevant_jurisdiction'], change from:input[type='date'], keyup delay:400ms from:input[name='keyword']">
+        hx-trigger="change from:select[name='source'], change from:select[name='relevant_jurisdiction'], change from:input[type='date'], keyup delay:400ms from:input[name='keyword']">
+    <label>Source
+      <select name="source">
+        <option value="">All</option>
+        {% for code, label in sources %}
+        <option value="{{ code }}" {{ "selected" if filters.source == code else "" }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
     <label>Jurisdiction
       <select name="relevant_jurisdiction">
         <option value="">All</option>

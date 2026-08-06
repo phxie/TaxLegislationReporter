@@ -17,7 +17,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
 
 JURISDICTIONS = ("FEDERAL", "CA", "NY")
-PUBLICATION_SOURCES = ("PWC_TAX_LIBRARY", "EY_TAX_ALERTS")
+PUBLICATION_SOURCES = ("PWC_TAX_LIBRARY", "EY_TAX_ALERTS", "KPMG_TAXNEWSFLASH_EUROPE")
 
 
 class Bill(Base):

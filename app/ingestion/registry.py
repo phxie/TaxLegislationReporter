@@ -7,6 +7,7 @@ from app.ingestion.base import SourceAdapter
 from app.ingestion.california import CaliforniaAdapter
 from app.ingestion.congress_gov import CongressGovAdapter
 from app.ingestion.ey_tax_alerts import EyTaxAlertsAdapter
+from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
 from app.ingestion.publications_base import PublicationSourceAdapter
 from app.ingestion.pwc_tax_library import PwcTaxLibraryAdapter
@@ -48,4 +49,5 @@ def build_publication_adapters(settings: Settings) -> list[PublicationSourceAdap
     return [
         PwcTaxLibraryAdapter(base_url=settings.pwc_tax_library_base_url),
         EyTaxAlertsAdapter(base_url=settings.ey_tax_alerts_base_url),
+        KpmgTaxNewsFlashEuropeAdapter(base_url=settings.kpmg_taxnewsflash_europe_base_url),
     ]
