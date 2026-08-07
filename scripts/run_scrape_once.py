@@ -17,10 +17,13 @@ from pathlib import Path
 # otherwise be importable.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import anthropic
+
 from app.config import get_settings
 from app.db import SessionLocal
 from app.ingestion.pipeline import run_all, run_all_publications
 from app.ingestion.registry import build_all_adapters, build_publication_adapters
+from app.ingestion.summarize import run_pending_summaries
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -58,6 +61,11 @@ def main() -> None:
             _log_run(run)
         for run in run_all_publications(db, publication_adapters):
             _log_run(run)
+
+        if publication_adapters and settings.anthropic_api_key:
+            client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+            summarized = run_pending_summaries(db, client)
+            logger.info("AI summaries: %d publications summarized", summarized)
     finally:
         db.close()
 

@@ -8,6 +8,13 @@
   <h2>{{ publication.title }}</h2>
   {% if publication.summary %}<p>{{ publication.summary }}</p>{% endif %}
 
+  {% if publication.ai_summary %}
+  <blockquote>
+    <strong>AI summary</strong>
+    <p>{{ publication.ai_summary }}</p>
+  </blockquote>
+  {% endif %}
+
   <table>
     <tbody>
       <tr><th>Published</th><td>{{ publication.published_date or "-" }}</td></tr>

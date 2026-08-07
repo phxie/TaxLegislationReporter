@@ -108,6 +108,25 @@ def distinct_publication_jurisdictions(db: Session) -> list[str]:
     return list(db.scalars(stmt).all())
 
 
+def list_publications_needing_summary(
+    db: Session, *, limit: int, stale_before: dt.datetime
+) -> list[Publication]:
+    """Publications with no AI summary yet, excluding ones whose summary was
+    requested recently (a batch may still be in flight for them).
+    """
+    stmt = (
+        select(Publication)
+        .where(
+            Publication.ai_summary.is_(None),
+            (Publication.ai_summary_requested_at.is_(None))
+            | (Publication.ai_summary_requested_at < stale_before),
+        )
+        .order_by(Publication.first_seen_at.desc())
+        .limit(limit)
+    )
+    return list(db.scalars(stmt).all())
+
+
 def distinct_publication_sources(db: Session) -> list[tuple[str, str]]:
     """Returns (source, source_label) pairs actually present, for a filter dropdown."""
     stmt = (

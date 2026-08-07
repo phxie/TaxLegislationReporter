@@ -5,6 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.18.5",
+    "anthropic>=0.120.2",
     "apscheduler>=3.10,<4.0",
     "fastapi>=0.139.2",
     "httpx>=0.28.1",
