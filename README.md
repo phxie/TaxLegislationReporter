@@ -12,10 +12,18 @@ from federal, state, and secondary sources into a single searchable web dashboar
 | Federal | [Congress.gov API](https://api.congress.gov/) | Free API key required |
 | California | [PUBINFO bulk data](https://downloads.leginfo.legislature.ca.gov/) | No auth required |
 | New York | [Open Legislation API](https://legislation.nysenate.gov/) | Free API key required |
+| Canada (federal) | [LEGISinfo](https://www.parl.ca/legisinfo/) | No auth required |
 
 Bills are filtered to tax-relevant ones using each source's own tax signal where available
 (Congress.gov policy area "Taxation", California's `taxlevy` flag) with a shared keyword
-fallback (see `app/ingestion/tax_filter.py`).
+fallback (see `app/ingestion/tax_filter.py`) — Canada has no such flag, so it always uses the
+keyword fallback, matched against the bill's full legislative summary as well as its title
+(Canadian tax bills are often titled generically, e.g. "Budget Implementation Act, 2026, No. 1").
+
+Canada re-pulls the current Parliament session's full bill list every run (a single request,
+~200 bills), but only re-fetches per-bill detail — where the status timeline and legislative
+summary live — for bills whose activity changed since the last run, so a steady-state run costs
+one request instead of ~200 (see `app/ingestion/canada_legisinfo.py`).
 
 California only publishes a full session snapshot once a day (its smaller daily delta file
 omits bill titles/subjects), so it's ingested on its own, longer schedule rather than the
@@ -98,7 +106,7 @@ Or scope it to specific sources:
 
 ```
 uv run scripts/run_scrape_once.py FEDERAL
-uv run scripts/run_scrape_once.py CA NY
+uv run scripts/run_scrape_once.py CA NY CANADA
 uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 ```
 
@@ -142,6 +150,7 @@ app/
 │   ├── congress_gov.py
 │   ├── california.py
 │   ├── new_york.py
+│   ├── canada_legisinfo.py
 │   ├── tax_filter.py           # Shared tax-relevance rules
 │   ├── diff.py                  # Bill insert/update + change detection
 │   ├── publications_base.py      # NormalizedPublication / PublicationSourceAdapter protocol

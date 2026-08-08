@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     congress_api_base_url: str = "https://api.congress.gov/v3"
     ny_senate_api_base_url: str = "https://legislation.nysenate.gov/api/3"
     ca_pubinfo_base_url: str = "https://downloads.leginfo.legislature.ca.gov"
+    canada_legisinfo_base_url: str = "https://www.parl.ca"
     pwc_tax_library_base_url: str = "https://www.pwc.com"
     ey_tax_alerts_base_url: str = "https://api-search.ey.com"
     kpmg_taxnewsflash_europe_base_url: str = "https://kpmg.com"

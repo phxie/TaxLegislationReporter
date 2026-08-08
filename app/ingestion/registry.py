@@ -5,6 +5,7 @@ import logging
 from app.config import Settings
 from app.ingestion.base import SourceAdapter
 from app.ingestion.california import CaliforniaAdapter
+from app.ingestion.canada_legisinfo import CanadaLegisinfoAdapter
 from app.ingestion.congress_gov import CongressGovAdapter
 from app.ingestion.ey_tax_alerts import EyTaxAlertsAdapter
 from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
@@ -32,6 +33,10 @@ def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
         )
     else:
         logger.warning("NY_SENATE_API_KEY not set; skipping New York adapter")
+
+    # No auth required, and (after the initial backfill) cheap: only bills
+    # whose activity changed since the last run get a detail fetch.
+    adapters.append(CanadaLegisinfoAdapter(base_url=settings.canada_legisinfo_base_url))
 
     return adapters
 

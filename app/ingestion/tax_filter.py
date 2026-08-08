@@ -56,3 +56,13 @@ def is_tax_relevant_ny(
 ) -> tuple[bool, list[str]]:
     matched = matching_keywords(title, summary, committee)
     return bool(matched), matched
+
+
+def is_tax_relevant_canada(title: str, summary: str | None) -> tuple[bool, list[str]]:
+    # LEGISinfo has no policy-area/subject tag like Congress.gov, so this
+    # relies entirely on keyword matching -- against the full legislative
+    # summary as well as the title, since Canadian tax bills are often titled
+    # generically (e.g. "Budget Implementation Act, 2026, No. 1") with the
+    # tax content only evident in the summary text.
+    matched = matching_keywords(title, summary)
+    return bool(matched), matched
