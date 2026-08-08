@@ -4,6 +4,7 @@
       <th>Published</th>
       <th>Title</th>
       <th>Summary</th>
+      <th>AI Summary</th>
       <th>Type</th>
       <th>Jurisdiction</th>
       <th>Source</th>
@@ -15,12 +16,22 @@
       <td>{{ pub.published_date or "-" }}</td>
       <td><a href="/publications/{{ pub.id }}">{{ pub.title }}</a></td>
       <td>{{ pub.summary or "-" }}</td>
+      <td>
+        {% if pub.ai_summary %}
+        <details>
+          <summary>Show</summary>
+          <p>{{ pub.ai_summary }}</p>
+        </details>
+        {% else %}
+        -
+        {% endif %}
+      </td>
       <td>{{ pub.content_type or "-" }}</td>
       <td>{{ pub.relevant_jurisdiction or "-" }}</td>
       <td>{{ pub.source_label }}</td>
     </tr>
     {% else %}
-    <tr><td colspan="6"><em>No publications match the current filters.</em></td></tr>
+    <tr><td colspan="7"><em>No publications match the current filters.</em></td></tr>
     {% endfor %}
   </tbody>
 </table>
