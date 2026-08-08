@@ -26,7 +26,13 @@ MAX_SUMMARY_TOKENS = 200
 PROMPT_TEMPLATE = (
     "Summarize the following tax-related article in 2-3 concise sentences for "
     "a tax professional audience. Focus on what changed and who it affects. "
-    "Respond with only the summary text, no preamble or headers.\n\n"
+    "The title and content below are all the information available -- there is "
+    "no fuller article text to consult. Write the best concise summary you can "
+    "from what's given, restating and lightly expanding on it in your own "
+    "words. Never say you lack access to the full article, apologize for "
+    "insufficient information, or ask for more content -- just summarize what "
+    "is provided. Respond with only the summary text, no preamble or "
+    "headers.\n\n"
     "Title: {title}\n\n"
     "Content: {content}"
 )
