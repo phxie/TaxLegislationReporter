@@ -13,17 +13,33 @@ from federal, state, and secondary sources into a single searchable web dashboar
 | California | [PUBINFO bulk data](https://downloads.leginfo.legislature.ca.gov/) | No auth required |
 | New York | [Open Legislation API](https://legislation.nysenate.gov/) | Free API key required |
 | Canada (federal) | [LEGISinfo](https://www.parl.ca/legisinfo/) | No auth required |
+| Spain (national) | [Congreso de los Diputados — búsqueda de iniciativas](https://www.congreso.es/es/busqueda-de-iniciativas) | No auth required |
 
 Bills are filtered to tax-relevant ones using each source's own tax signal where available
 (Congress.gov policy area "Taxation", California's `taxlevy` flag) with a shared keyword
-fallback (see `app/ingestion/tax_filter.py`) — Canada has no such flag, so it always uses the
-keyword fallback, matched against the bill's full legislative summary as well as its title
-(Canadian tax bills are often titled generically, e.g. "Budget Implementation Act, 2026, No. 1").
+fallback (see `app/ingestion/tax_filter.py`) — Canada and Spain have no such flag, so they
+always use the keyword fallback. Canada's is matched against the bill's full legislative
+summary as well as its title (Canadian tax bills are often titled generically, e.g. "Budget
+Implementation Act, 2026, No. 1"). Spain's titles are in Spanish, so a separate
+`SPANISH_TAX_KEYWORDS` list is matched against the title only — no legislative-summary text is
+available from this source (see below).
 
 Canada re-pulls the current Parliament session's full bill list every run (a single request,
 ~200 bills), but only re-fetches per-bill detail — where the status timeline and legislative
 summary live — for bills whose activity changed since the last run, so a steady-state run costs
 one request instead of ~200 (see `app/ingestion/canada_legisinfo.py`).
+
+Spain has no bill-specific API, but its legislative search tool has an undocumented "open data"
+export (a plain POST returning XML/CSV, discovered by reading the search page's own JS —
+`exportOpendata`/`downloadFile` — rather than a network capture) covering every parliamentary
+"iniciativa", filterable by type. This adapter scopes to the bill-like types — government bills
+("Proyecto de ley"), the four private-member's-bill variants, and royal decree-laws (Spain often
+amends tax law by decree-law) — and re-pulls all of them (a few hundred items total) every run
+like PwC/California, since no incremental filter is exposed. Status data here is thin (no dated
+stage-by-stage timeline like Canada's): just presented/qualified dates and a final result once
+resolved, so `full_text_url` and a real per-bill deep link aren't available (the site's own
+detail-page links go through a legacy session-gated system) — `source_url` points at the search
+tool itself (see `app/ingestion/spain_congreso.py`).
 
 California only publishes a full session snapshot once a day (its smaller daily delta file
 omits bill titles/subjects), so it's ingested on its own, longer schedule rather than the
@@ -106,7 +122,7 @@ Or scope it to specific sources:
 
 ```
 uv run scripts/run_scrape_once.py FEDERAL
-uv run scripts/run_scrape_once.py CA NY CANADA
+uv run scripts/run_scrape_once.py CA NY CANADA SPAIN
 uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 ```
 
@@ -151,6 +167,7 @@ app/
 │   ├── california.py
 │   ├── new_york.py
 │   ├── canada_legisinfo.py
+│   ├── spain_congreso.py
 │   ├── tax_filter.py           # Shared tax-relevance rules
 │   ├── diff.py                  # Bill insert/update + change detection
 │   ├── publications_base.py      # NormalizedPublication / PublicationSourceAdapter protocol

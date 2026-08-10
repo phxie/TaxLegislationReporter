@@ -12,6 +12,7 @@ from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
 from app.ingestion.publications_base import PublicationSourceAdapter
 from app.ingestion.pwc_tax_library import PwcTaxLibraryAdapter
+from app.ingestion.spain_congreso import SpainCongresoAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,15 @@ def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
     # No auth required, and (after the initial backfill) cheap: only bills
     # whose activity changed since the last run get a detail fetch.
     adapters.append(CanadaLegisinfoAdapter(base_url=settings.canada_legisinfo_base_url))
+
+    # No auth required; small, bounded dataset (a few hundred items per
+    # legislature), re-pulled in full every run like PwC/California.
+    adapters.append(
+        SpainCongresoAdapter(
+            base_url=settings.spain_congreso_base_url,
+            legislature=settings.spain_congreso_legislature,
+        )
+    )
 
     return adapters
 

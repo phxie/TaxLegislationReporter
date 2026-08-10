@@ -2,6 +2,7 @@ from app.ingestion.tax_filter import (
     is_tax_relevant_ca,
     is_tax_relevant_federal,
     is_tax_relevant_ny,
+    is_tax_relevant_spain,
     matching_keywords,
 )
 
@@ -52,3 +53,19 @@ def test_ny_committee_keyword_match():
     relevant, matched = is_tax_relevant_ny("An act relating to schools", None, "Ways and Means Taxation")
     assert relevant is True
     assert "taxation" in matched
+
+
+def test_spain_keyword_match():
+    relevant, matched = is_tax_relevant_spain(
+        "Proyecto de Ley por la que se modifica la Ley 37/1992 del Impuesto sobre el Valor Añadido"
+    )
+    assert relevant is True
+    assert "impuesto" in matched
+
+
+def test_spain_not_relevant():
+    relevant, matched = is_tax_relevant_spain(
+        "Proyecto de Ley Orgánica de medidas en materia de violencia vicaria"
+    )
+    assert relevant is False
+    assert matched == []

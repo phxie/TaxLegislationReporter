@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     ny_senate_api_base_url: str = "https://legislation.nysenate.gov/api/3"
     ca_pubinfo_base_url: str = "https://downloads.leginfo.legislature.ca.gov"
     canada_legisinfo_base_url: str = "https://www.parl.ca"
+    spain_congreso_base_url: str = "https://www.congreso.es"
+    # "15" = XV Legislatura (2023-present). Spain elects a new Congress every
+    # few years, so this is expected to need updating periodically.
+    spain_congreso_legislature: str = "15"
     pwc_tax_library_base_url: str = "https://www.pwc.com"
     ey_tax_alerts_base_url: str = "https://api-search.ey.com"
     kpmg_taxnewsflash_europe_base_url: str = "https://kpmg.com"

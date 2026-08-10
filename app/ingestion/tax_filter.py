@@ -66,3 +66,37 @@ def is_tax_relevant_canada(title: str, summary: str | None) -> tuple[bool, list[
     # tax content only evident in the summary text.
     matched = matching_keywords(title, summary)
     return bool(matched), matched
+
+
+# `TAX_KEYWORDS` is English-only, so it can't be reused for Spanish-language
+# titles (Congreso de los Diputados; see app/ingestion/spain_congreso.py). A
+# separate keyword list, rather than a translation layer, keeps each list
+# tuned to its own source's phrasing.
+SPANISH_TAX_KEYWORDS = [
+    "impuesto",
+    "impuestos",
+    "tributario",
+    "tributaria",
+    "tributarios",
+    "tributarias",
+    "fiscal",
+    "fiscalidad",
+    "iva",
+    "irpf",
+    "hacienda",
+    "arancel",
+    "aranceles",
+    "gravamen",
+    "gravámenes",
+    "tasa",
+]
+
+
+def matching_keywords_es(*texts: str | None) -> list[str]:
+    haystack = " ".join(t.lower() for t in texts if t)
+    return sorted({kw for kw in SPANISH_TAX_KEYWORDS if kw in haystack})
+
+
+def is_tax_relevant_spain(title: str) -> tuple[bool, list[str]]:
+    matched = matching_keywords_es(title)
+    return bool(matched), matched
