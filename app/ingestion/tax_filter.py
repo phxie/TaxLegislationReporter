@@ -1,3 +1,5 @@
+import re
+
 TAX_KEYWORDS = [
     "tax",
     "taxation",
@@ -99,4 +101,18 @@ def matching_keywords_es(*texts: str | None) -> list[str]:
 
 def is_tax_relevant_spain(title: str) -> tuple[bool, list[str]]:
     matched = matching_keywords_es(title)
+    return bool(matched), matched
+
+
+# The UK's main annual tax bill is literally titled "Finance Bill" (or
+# "Finance (No. 2) Bill"), with no "tax" wording at all -- the same kind of
+# gap Congress.gov's policy_area="Taxation" flag exists to cover -- so it's
+# special-cased the same way rather than relying on keyword match alone.
+_UK_FINANCE_BILL_RE = re.compile(r"\bfinance\s*(\(no\.?\s*\d+\))?\s*bill\b", re.IGNORECASE)
+
+
+def is_tax_relevant_uk(title: str, summary: str | None) -> tuple[bool, list[str]]:
+    if _UK_FINANCE_BILL_RE.search(title):
+        return True, ["finance_bill"]
+    matched = matching_keywords(title, summary)
     return bool(matched), matched

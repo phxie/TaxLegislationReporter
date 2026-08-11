@@ -3,6 +3,7 @@ from app.ingestion.tax_filter import (
     is_tax_relevant_federal,
     is_tax_relevant_ny,
     is_tax_relevant_spain,
+    is_tax_relevant_uk,
     matching_keywords,
 )
 
@@ -67,5 +68,23 @@ def test_spain_not_relevant():
     relevant, matched = is_tax_relevant_spain(
         "Proyecto de Ley Orgánica de medidas en materia de violencia vicaria"
     )
+    assert relevant is False
+    assert matched == []
+
+
+def test_uk_finance_bill_short_circuits():
+    relevant, matched = is_tax_relevant_uk("Finance (No. 2) Bill", None)
+    assert relevant is True
+    assert matched == ["finance_bill"]
+
+
+def test_uk_keyword_fallback():
+    relevant, matched = is_tax_relevant_uk("Children's Clothing (Value Added Tax) Bill", None)
+    assert relevant is True
+    assert "tax" in matched
+
+
+def test_uk_not_relevant():
+    relevant, matched = is_tax_relevant_uk("Sporting Events Bill", "A Bill about ticket touting.")
     assert relevant is False
     assert matched == []

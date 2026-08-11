@@ -14,15 +14,18 @@ from federal, state, and secondary sources into a single searchable web dashboar
 | New York | [Open Legislation API](https://legislation.nysenate.gov/) | Free API key required |
 | Canada (federal) | [LEGISinfo](https://www.parl.ca/legisinfo/) | No auth required |
 | Spain (national) | [Congreso de los Diputados — búsqueda de iniciativas](https://www.congreso.es/es/busqueda-de-iniciativas) | No auth required |
+| United Kingdom (national) | [UK Parliament Bills API](https://bills-api.parliament.uk/) | No auth required |
 
 Bills are filtered to tax-relevant ones using each source's own tax signal where available
 (Congress.gov policy area "Taxation", California's `taxlevy` flag) with a shared keyword
-fallback (see `app/ingestion/tax_filter.py`) — Canada and Spain have no such flag, so they
-always use the keyword fallback. Canada's is matched against the bill's full legislative
+fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, and the UK have no such flag, so
+they fall back to keyword matching. Canada's is matched against the bill's full legislative
 summary as well as its title (Canadian tax bills are often titled generically, e.g. "Budget
 Implementation Act, 2026, No. 1"). Spain's titles are in Spanish, so a separate
 `SPANISH_TAX_KEYWORDS` list is matched against the title only — no legislative-summary text is
-available from this source (see below).
+available from this source (see below). The UK's main annual tax bill is literally titled
+"Finance Bill" (or "Finance (No. 2) Bill") with no "tax" wording at all, so it's special-cased
+the same way Congress.gov's policy-area flag is, ahead of the keyword fallback.
 
 Canada re-pulls the current Parliament session's full bill list every run (a single request,
 ~200 bills), but only re-fetches per-bill detail — where the status timeline and legislative
@@ -40,6 +43,18 @@ stage-by-stage timeline like Canada's): just presented/qualified dates and a fin
 resolved, so `full_text_url` and a real per-bill deep link aren't available (the site's own
 detail-page links go through a legacy session-gated system) — `source_url` points at the search
 tool itself (see `app/ingestion/spain_congreso.py`).
+
+The UK is the cleanest of the non-US sources: an official, documented REST API
+(`bills-api.parliament.uk`, confirmed via its own OpenAPI spec) with no auth, giving structured
+sponsors, a full dated stage-by-stage timeline (`/Bills/{id}/Stages`), and a real per-bill page
+(`bills.parliament.uk/bills/{id}`). It has no "current session" endpoint, so the adapter infers
+one from the most-recently-updated bill rather than a hardcoded session number (unlike Spain's
+`legislature` setting, which has no equivalent signal to derive it from). Like Spain, a session
+is small enough (a couple hundred bills) to re-pull in full every run rather than filtering
+incrementally. The API itself is unusually slow per request (observed ~10-15s per call in
+practice), so the adapter fetches the (slow) stage timeline only for bills that already passed
+the relevance check on the bill detail response, rather than for every bill in the session —
+cutting a full run from ~30 minutes to a few minutes (see `app/ingestion/uk_parliament.py`).
 
 California only publishes a full session snapshot once a day (its smaller daily delta file
 omits bill titles/subjects), so it's ingested on its own, longer schedule rather than the
@@ -122,7 +137,7 @@ Or scope it to specific sources:
 
 ```
 uv run scripts/run_scrape_once.py FEDERAL
-uv run scripts/run_scrape_once.py CA NY CANADA SPAIN
+uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK
 uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 ```
 
@@ -168,6 +183,7 @@ app/
 │   ├── new_york.py
 │   ├── canada_legisinfo.py
 │   ├── spain_congreso.py
+│   ├── uk_parliament.py
 │   ├── tax_filter.py           # Shared tax-relevance rules
 │   ├── diff.py                  # Bill insert/update + change detection
 │   ├── publications_base.py      # NormalizedPublication / PublicationSourceAdapter protocol

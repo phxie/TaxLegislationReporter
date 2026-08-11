@@ -13,6 +13,7 @@ from app.ingestion.new_york import NewYorkSenateAdapter
 from app.ingestion.publications_base import PublicationSourceAdapter
 from app.ingestion.pwc_tax_library import PwcTaxLibraryAdapter
 from app.ingestion.spain_congreso import SpainCongresoAdapter
+from app.ingestion.uk_parliament import UkParliamentAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,10 @@ def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
             legislature=settings.spain_congreso_legislature,
         )
     )
+
+    # No auth required; official structured API, small current-session
+    # dataset re-pulled in full every run like Spain.
+    adapters.append(UkParliamentAdapter(base_url=settings.uk_parliament_base_url))
 
     return adapters
 

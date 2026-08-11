@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:bills.parliament.uk)",
+      "Bash(curl -s \"https://bills-api.parliament.uk/api/v1/Bills?Session=40&Take=50&Skip=0\" -A \"Mozilla/5.0\" -o /tmp/uk_page1.json -w \"HTTP:%{http_code}\\\\n\")",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
