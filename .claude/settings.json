@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:bills.parliament.uk)",
       "Bash(curl -s \"https://bills-api.parliament.uk/api/v1/Bills?Session=40&Take=50&Skip=0\" -A \"Mozilla/5.0\" -o /tmp/uk_page1.json -w \"HTTP:%{http_code}\\\\n\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(curl -sIL \"https://sansad.in\" -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0 Safari/537.36\")"
     ]
   }
 }

@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     # few years, so this is expected to need updating periodically.
     spain_congreso_legislature: str = "15"
     uk_parliament_base_url: str = "https://bills-api.parliament.uk"
+    india_prs_base_url: str = "https://prsindia.org"
     pwc_tax_library_base_url: str = "https://www.pwc.com"
     ey_tax_alerts_base_url: str = "https://api-search.ey.com"
     kpmg_taxnewsflash_europe_base_url: str = "https://kpmg.com"

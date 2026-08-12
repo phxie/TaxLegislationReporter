@@ -15,17 +15,18 @@ from federal, state, and secondary sources into a single searchable web dashboar
 | Canada (federal) | [LEGISinfo](https://www.parl.ca/legisinfo/) | No auth required |
 | Spain (national) | [Congreso de los Diputados — búsqueda de iniciativas](https://www.congreso.es/es/busqueda-de-iniciativas) | No auth required |
 | United Kingdom (national) | [UK Parliament Bills API](https://bills-api.parliament.uk/) | No auth required |
+| India (national) | [PRS Legislative Research — Bills Track](https://prsindia.org/billtrack) | No auth required |
 
 Bills are filtered to tax-relevant ones using each source's own tax signal where available
 (Congress.gov policy area "Taxation", California's `taxlevy` flag) with a shared keyword
-fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, and the UK have no such flag, so
-they fall back to keyword matching. Canada's is matched against the bill's full legislative
-summary as well as its title (Canadian tax bills are often titled generically, e.g. "Budget
-Implementation Act, 2026, No. 1"). Spain's titles are in Spanish, so a separate
+fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, the UK, and India have no such
+flag, so they fall back to keyword matching. Canada's is matched against the bill's full
+legislative summary as well as its title (Canadian tax bills are often titled generically, e.g.
+"Budget Implementation Act, 2026, No. 1"). Spain's titles are in Spanish, so a separate
 `SPANISH_TAX_KEYWORDS` list is matched against the title only — no legislative-summary text is
-available from this source (see below). The UK's main annual tax bill is literally titled
-"Finance Bill" (or "Finance (No. 2) Bill") with no "tax" wording at all, so it's special-cased
-the same way Congress.gov's policy-area flag is, ahead of the keyword fallback.
+available from this source (see below). Both the UK's and India's main annual tax bill are
+literally titled "Finance Bill" with no "tax" wording at all, so that's special-cased the same
+way Congress.gov's policy-area flag is, ahead of the keyword fallback, for both sources.
 
 Canada re-pulls the current Parliament session's full bill list every run (a single request,
 ~200 bills), but only re-fetches per-bill detail — where the status timeline and legislative
@@ -55,6 +56,18 @@ incrementally. The API itself is unusually slow per request (observed ~10-15s pe
 practice), so the adapter fetches the (slow) stage timeline only for bills that already passed
 the relevance check on the bill detail response, rather than for every bill in the session —
 cutting a full run from ~30 minutes to a few minutes (see `app/ingestion/uk_parliament.py`).
+
+India has no official structured bill-tracking API — the unified Parliament portal (sansad.in)
+is a client-rendered SPA with no discoverable data endpoint — so this adapter uses
+[PRS Legislative Research](https://prsindia.org/)'s public "Bills Track" page instead: an
+independent, well-established legislative research organization (not a government body), server-
+rendered with no JS required, covering every bill before Lok Sabha/Rajya Sabha with a real dated
+status timeline and PRS's own plain-English bill summaries — richer than most of the official
+sources above. Applying the same lesson learned from the UK, detail pages (which carry the
+timeline and summary) are only fetched for bills that already pass the relevance check on title
+alone, out of the ~1,000 bills in the full listing. No session/term identifier is exposed, so the
+year embedded in the bill's title (Indian bills are consistently titled "..., 2026") stands in
+for it (see `app/ingestion/india_prs.py`).
 
 California only publishes a full session snapshot once a day (its smaller daily delta file
 omits bill titles/subjects), so it's ingested on its own, longer schedule rather than the
@@ -137,7 +150,7 @@ Or scope it to specific sources:
 
 ```
 uv run scripts/run_scrape_once.py FEDERAL
-uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK
+uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA
 uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 ```
 
@@ -184,6 +197,7 @@ app/
 │   ├── canada_legisinfo.py
 │   ├── spain_congreso.py
 │   ├── uk_parliament.py
+│   ├── india_prs.py
 │   ├── tax_filter.py           # Shared tax-relevance rules
 │   ├── diff.py                  # Bill insert/update + change detection
 │   ├── publications_base.py      # NormalizedPublication / PublicationSourceAdapter protocol

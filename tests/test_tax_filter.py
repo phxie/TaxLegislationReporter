@@ -1,6 +1,7 @@
 from app.ingestion.tax_filter import (
     is_tax_relevant_ca,
     is_tax_relevant_federal,
+    is_tax_relevant_india,
     is_tax_relevant_ny,
     is_tax_relevant_spain,
     is_tax_relevant_uk,
@@ -86,5 +87,25 @@ def test_uk_keyword_fallback():
 
 def test_uk_not_relevant():
     relevant, matched = is_tax_relevant_uk("Sporting Events Bill", "A Bill about ticket touting.")
+    assert relevant is False
+    assert matched == []
+
+
+def test_india_finance_bill_short_circuits():
+    relevant, matched = is_tax_relevant_india("The Finance Bill, 2026", None)
+    assert relevant is True
+    assert matched == ["finance_bill"]
+
+
+def test_india_keyword_fallback():
+    relevant, matched = is_tax_relevant_india("The Income-tax Bill, 2025", None)
+    assert relevant is True
+    assert "tax" in matched
+
+
+def test_india_not_relevant():
+    relevant, matched = is_tax_relevant_india(
+        "The National Co-operative Development Corporation (Amendment) Bill, 2026", None
+    )
     assert relevant is False
     assert matched == []

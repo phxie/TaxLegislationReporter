@@ -8,6 +8,7 @@ from app.ingestion.california import CaliforniaAdapter
 from app.ingestion.canada_legisinfo import CanadaLegisinfoAdapter
 from app.ingestion.congress_gov import CongressGovAdapter
 from app.ingestion.ey_tax_alerts import EyTaxAlertsAdapter
+from app.ingestion.india_prs import IndiaPrsAdapter
 from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
 from app.ingestion.publications_base import PublicationSourceAdapter
@@ -52,6 +53,12 @@ def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
     # No auth required; official structured API, small current-session
     # dataset re-pulled in full every run like Spain.
     adapters.append(UkParliamentAdapter(base_url=settings.uk_parliament_base_url))
+
+    # No auth required; India has no official structured bill API, so this
+    # scrapes PRS Legislative Research's public bill tracker instead (see
+    # app/ingestion/india_prs.py). Full listing re-pulled every run, detail
+    # fetched only for likely-relevant bills.
+    adapters.append(IndiaPrsAdapter(base_url=settings.india_prs_base_url))
 
     return adapters
 

@@ -104,15 +104,29 @@ def is_tax_relevant_spain(title: str) -> tuple[bool, list[str]]:
     return bool(matched), matched
 
 
-# The UK's main annual tax bill is literally titled "Finance Bill" (or
-# "Finance (No. 2) Bill"), with no "tax" wording at all -- the same kind of
-# gap Congress.gov's policy_area="Taxation" flag exists to cover -- so it's
+# Both the UK's and India's main annual tax bill is literally titled
+# "Finance Bill" (India: "The Finance Bill, 2026"; UK: "Finance (No. 2)
+# Bill"), with no "tax" wording at all -- the same kind of gap
+# Congress.gov's policy_area="Taxation" flag exists to cover -- so it's
 # special-cased the same way rather than relying on keyword match alone.
-_UK_FINANCE_BILL_RE = re.compile(r"\bfinance\s*(\(no\.?\s*\d+\))?\s*bill\b", re.IGNORECASE)
+_FINANCE_BILL_RE = re.compile(r"\bfinance\s*(\(no\.?\s*\d+\))?\s*bill\b", re.IGNORECASE)
 
 
 def is_tax_relevant_uk(title: str, summary: str | None) -> tuple[bool, list[str]]:
-    if _UK_FINANCE_BILL_RE.search(title):
+    if _FINANCE_BILL_RE.search(title):
+        return True, ["finance_bill"]
+    matched = matching_keywords(title, summary)
+    return bool(matched), matched
+
+
+def is_tax_relevant_india(title: str, summary: str | None) -> tuple[bool, list[str]]:
+    # PRS's own "Finance Industry and Labour" category is too broad to use as
+    # a short-circuit (it also covers banking/insurance/labour bills with no
+    # tax content), and the "Ministry: Finance" field on a bill's detail page
+    # has the same problem -- so, like Canada, this relies mainly on keyword
+    # matching against the title and PRS's own bill summary, plus the same
+    # "Finance Bill" special case as the UK.
+    if _FINANCE_BILL_RE.search(title):
         return True, ["finance_bill"]
     matched = matching_keywords(title, summary)
     return bool(matched), matched
