@@ -130,3 +130,44 @@ def is_tax_relevant_india(title: str, summary: str | None) -> tuple[bool, list[s
         return True, ["finance_bill"]
     matched = matching_keywords(title, summary)
     return bool(matched), matched
+
+
+# `TAX_KEYWORDS` is English-only, so it can't be reused for French-language
+# titles (Assemblée Nationale; see app/ingestion/france_assemblee.py).
+FRENCH_TAX_KEYWORDS = [
+    "impôt",
+    "impôts",
+    "imposition",
+    "fiscal",
+    "fiscale",
+    "fiscaux",
+    "fiscalité",
+    "défiscalisation",
+    "taxe",
+    "taxes",
+    "tva",
+    "contribuable",
+    "contribuables",
+    "exonération fiscale",
+    "crédit d'impôt",
+    "réduction d'impôt",
+    "niche fiscale",
+]
+
+
+def matching_keywords_fr(*texts: str | None) -> list[str]:
+    haystack = " ".join(t.lower() for t in texts if t)
+    return sorted({kw for kw in FRENCH_TAX_KEYWORDS if kw in haystack})
+
+
+# France's main annual tax bill is titled "Projet de loi de finances" (the
+# Finance Bill) -- the same generically-named-annual-tax-bill gap as the UK
+# and India, just in French, so it gets the same special case.
+_FRENCH_FINANCE_BILL_RE = re.compile(r"\bloi de finances\b", re.IGNORECASE)
+
+
+def is_tax_relevant_france(title: str) -> tuple[bool, list[str]]:
+    if _FRENCH_FINANCE_BILL_RE.search(title):
+        return True, ["finance_bill"]
+    matched = matching_keywords_fr(title)
+    return bool(matched), matched

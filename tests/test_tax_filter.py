@@ -1,6 +1,7 @@
 from app.ingestion.tax_filter import (
     is_tax_relevant_ca,
     is_tax_relevant_federal,
+    is_tax_relevant_france,
     is_tax_relevant_india,
     is_tax_relevant_ny,
     is_tax_relevant_spain,
@@ -106,6 +107,28 @@ def test_india_keyword_fallback():
 def test_india_not_relevant():
     relevant, matched = is_tax_relevant_india(
         "The National Co-operative Development Corporation (Amendment) Bill, 2026", None
+    )
+    assert relevant is False
+    assert matched == []
+
+
+def test_france_finance_bill_short_circuits():
+    relevant, matched = is_tax_relevant_france("Projet de loi de finances pour 2026")
+    assert relevant is True
+    assert matched == ["finance_bill"]
+
+
+def test_france_keyword_fallback():
+    relevant, matched = is_tax_relevant_france(
+        "Proposition de loi visant à baisser la fiscalité de l'électricité"
+    )
+    assert relevant is True
+    assert "fiscalité" in matched
+
+
+def test_france_not_relevant():
+    relevant, matched = is_tax_relevant_france(
+        "Proposition de loi visant à favoriser la participation à la vie démocratique"
     )
     assert relevant is False
     assert matched == []

@@ -8,6 +8,7 @@ from app.ingestion.california import CaliforniaAdapter
 from app.ingestion.canada_legisinfo import CanadaLegisinfoAdapter
 from app.ingestion.congress_gov import CongressGovAdapter
 from app.ingestion.ey_tax_alerts import EyTaxAlertsAdapter
+from app.ingestion.france_assemblee import FranceAssembleeAdapter
 from app.ingestion.india_prs import IndiaPrsAdapter
 from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
@@ -65,7 +66,16 @@ def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
 
 def build_heavy_adapters(settings: Settings) -> list[SourceAdapter]:
     """Adapters that are expensive (large downloads) and run on their own, longer cadence."""
-    return [CaliforniaAdapter(base_url=settings.ca_pubinfo_base_url)]
+    return [
+        CaliforniaAdapter(base_url=settings.ca_pubinfo_base_url),
+        # No auth required; a ~10MB bulk zip of every dossier for the
+        # current legislature (no per-bill requests needed at all, unlike
+        # every other bill source here), refreshed daily like California.
+        FranceAssembleeAdapter(
+            base_url=settings.france_an_base_url,
+            legislature=settings.france_an_legislature,
+        ),
+    ]
 
 
 def build_all_adapters(settings: Settings) -> list[SourceAdapter]:

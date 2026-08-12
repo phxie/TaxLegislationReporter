@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     spain_congreso_legislature: str = "15"
     uk_parliament_base_url: str = "https://bills-api.parliament.uk"
     india_prs_base_url: str = "https://prsindia.org"
+    france_an_base_url: str = "https://data.assemblee-nationale.fr"
+    # "17" = 17th legislature (2024-present). France elects a new National
+    # Assembly every few years, so this is expected to need updating
+    # periodically, same as Spain's `legislature` setting.
+    france_an_legislature: str = "17"
     pwc_tax_library_base_url: str = "https://www.pwc.com"
     ey_tax_alerts_base_url: str = "https://api-search.ey.com"
     kpmg_taxnewsflash_europe_base_url: str = "https://kpmg.com"
