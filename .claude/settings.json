@@ -17,7 +17,25 @@
       "Bash(curl -sI \"https://www.parliament.gov.sg/api/media/4885e7e0-f4c9-44d1-8280-d2d8f317f343/Land-Titles-Strata-Amendment-Bill-18-2026.pdf\" -A \"Mozilla/5.0\")",
       "Bash(python -c ' *)",
       "Bash(curl -s \"http://127.0.0.1:8122/bills/SINGAPORE/2022/01d3adf0-55a0-46a5-a161-eb6a9f3f5393\" -o /tmp/sg_detail.html -w \"%{http_code}\\\\n\")",
-      "Bash(uv remove *)"
+      "Bash(uv remove *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://sil.gobernacion.gob.mx/portal\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://www.diputados.gob.mx\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://gaceta.diputados.gob.mx\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://infosen.senado.gob.mx\")",
+      "Bash(curl -s \"https://www.diputados.gob.mx\" -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0 Safari/537.36\" -o /tmp/mx_dip.html -w \"%{http_code} %{size_download}\\\\n\")",
+      "Bash(curl -sL \"https://web.diputados.gob.mx\" -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0 Safari/537.36\" -o /tmp/mx_dip2.html -w \"%{http_code} %{size_download}\\\\n\")",
+      "Bash(curl -s \"http://sil.gobernacion.gob.mx/portal\" -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0 Safari/537.36\" -o /tmp/mx_sil.html -w \"%{http_code} %{size_download}\\\\n\")",
+      "Bash(curl -s \"https://nsil.gobernacion.gob.mx\" -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0 Safari/537.36\" -o /tmp/mx_nsil.html -w \"%{http_code} %{size_download}\\\\n\")",
+      "Bash(curl -sv \"https://nsil.gobernacion.gob.mx\" -A \"Mozilla/5.0\" -o /tmp/mx_nsil.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s \"https://gaceta.diputados.gob.mx/gp_iniciativas.html\" -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0 Safari/537.36\" -o /tmp/mx_gp_iniciativas.html -w \"%{http_code} %{size_download}\\\\n\")",
+      "Bash(grep -io '<td[^>]*>[^<]\\\\{10,150\\\\}</td>' /tmp/mx_gp_iniciativas.html)",
+      "Bash(grep -o '<TABLE WIDTH=\"760\"><tr>.\\\\{0,300\\\\}' /tmp/mx_gp_iniciativas.html)",
+      "Bash(curl -s \"https://gaceta.diputados.gob.mx/Gaceta/Iniciativas/66/gp66_a2segundo.html\" -A \"Mozilla/5.0\" -o /tmp/mx_period.html -w \"%{http_code} %{size_download}\\\\n\")",
+      "Bash(grep -o '<tr[^>]*>.\\\\{0,400\\\\}' /tmp/mx_period.html)",
+      "Bash(python3 -c ' *)",
+      "Bash(uv --directory 'c:\\\\Users\\\\teemo\\\\OneDrive\\\\Desktop\\\\TaxLegislationReporter' run python -c ' *)",
+      "Bash(curl -sI \"https://gaceta.diputados.gob.mx/gp_iniciativas.html\")",
+      "Bash(curl -s \"http://127.0.0.1:8123/bills/MEXICO/66/1029\" -o /tmp/mx_detail.html -w \"%{http_code}\\\\n\")"
     ]
   }
 }

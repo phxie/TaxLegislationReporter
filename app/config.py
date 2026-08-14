@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     # same as Spain's/France's `legislature` settings.
     germany_bundestag_wahlperiode: str = "21"
     singapore_parliament_base_url: str = "https://www.parliament.gov.sg"
+    mexico_diputados_base_url: str = "https://gaceta.diputados.gob.mx"
     pwc_tax_library_base_url: str = "https://www.pwc.com"
     ey_tax_alerts_base_url: str = "https://api-search.ey.com"
     kpmg_taxnewsflash_europe_base_url: str = "https://kpmg.com"

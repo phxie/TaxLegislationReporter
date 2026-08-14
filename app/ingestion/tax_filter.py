@@ -246,3 +246,50 @@ def is_tax_relevant_singapore(title: str, summary: str | None = None) -> tuple[b
     haystack = " ".join(t for t in (title, summary) if t)
     matched = sorted({m.lower() for m in _SINGAPORE_TAX_WORD_RE.findall(haystack)})
     return bool(matched), matched
+
+
+# Mexican Spanish bill titles use "fiscal" in two unrelated senses -- tax
+# ("Código Fiscal de la Federación", "Coordinación Fiscal", "estímulo
+# fiscal") and prosecutorial/audit ("Fiscalía General", "fiscalización" =
+# government auditing). Confirmed against the full current legislature's
+# ~6,850 real bill titles (see app/ingestion/mexico_diputados.py) that
+# whole-word matching resolves this cleanly -- "fiscal" as its own word
+# never appeared in a title that was purely about Fiscalía/fiscalización
+# with no genuine tax-law content, since "fiscalía"/"fiscalización" extend
+# past the word boundary. "hacienda" was deliberately left out after the
+# same real-data check: its only real matches were about the Treasury
+# Secretary's confirmation process, states'/municipalities' financial
+# discipline, and unrelated administrative liability -- not tax law.
+MEXICO_TAX_KEYWORDS = [
+    "impuesto",
+    "impuestos",
+    "tributario",
+    "tributaria",
+    "tributarios",
+    "tributarias",
+    "fiscal",
+    "arancel",
+    "aranceles",
+    "aduana",
+    "aduanas",
+    "aduanero",
+    "aduanera",
+    "iva",
+    "isr",
+    "contribuyente",
+    "contribuyentes",
+    "recaudación",
+    "gravamen",
+    "gravámenes",
+]
+
+_MEXICO_TAX_WORD_RE = re.compile(
+    r"\b(" + "|".join(re.escape(kw) for kw in MEXICO_TAX_KEYWORDS) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def is_tax_relevant_mexico(title: str, summary: str | None = None) -> tuple[bool, list[str]]:
+    haystack = " ".join(t for t in (title, summary) if t)
+    matched = sorted({m.lower() for m in _MEXICO_TAX_WORD_RE.findall(haystack)})
+    return bool(matched), matched

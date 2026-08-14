@@ -19,30 +19,37 @@ from federal, state, and secondary sources into a single searchable web dashboar
 | France (national) | [Assemblée Nationale — Open Data](https://data.assemblee-nationale.fr/) | No auth required |
 | Germany (national) | [Bundestag DIP API](https://dip.bundestag.de/) | Free API key required (a public demo key ships as the default — see below) |
 | Singapore (national) | [Parliament of Singapore — Bills Introduced](https://www.parliament.gov.sg/parliamentary-business/bills-introduced) | No auth required |
+| Mexico (national) | [Cámara de Diputados — Gaceta Parlamentaria](https://gaceta.diputados.gob.mx/gp_iniciativas.html) | No auth required |
 
 Bills are filtered to tax-relevant ones using each source's own tax signal where available
 (Congress.gov policy area "Taxation", California's `taxlevy` flag) with a shared keyword
-fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, the UK, India, France, Germany, and
-Singapore have no such flag, so they fall back to keyword matching. Canada's is matched against
-the bill's full legislative summary as well as its title (Canadian tax bills are often titled
-generically, e.g. "Budget Implementation Act, 2026, No. 1"). Spain's, France's, and Germany's
-titles are in Spanish/French/German, so separate `SPANISH_TAX_KEYWORDS`/`FRENCH_TAX_KEYWORDS`/
-`GERMAN_TAX_KEYWORDS` lists are matched against the title (Spain: title only, no
-legislative-summary text is available from that source; France: title only too — see below;
-Germany: title and abstract, like Canada — see below). The UK's, India's, and France's main
-annual tax bill are all literally titled some variant of "Finance Bill" ("Projet de loi de
-finances" in French) with no "tax" wording at all, so that's special-cased the same way
-Congress.gov's policy-area flag is, ahead of the keyword fallback, for all three. Germany needs
-no such special case: German compounds tax terms directly into the word itself, so even its own
-annual omnibus tax act ("Jahressteuergesetz") already contains "steuer" as a literal substring —
-confirmed by checking every title in a real Wahlperiode-21 pull for false positives before
-relying on it (see `app/ingestion/germany_bundestag.py`). Singapore is English-speaking, but its
-bill titles surfaced a substring pitfall the shared `matching_keywords()` helper doesn't guard
-against: a real bill titled "Third-Party Taxi Booking Service Providers Bill" contains "tax"
-inside "Taxi". `SINGAPORE_TAX_KEYWORDS` is matched with a whole-word regex instead of plain
-substring matching to avoid that (and equivalents like "duty"/"gst"/"customs"), validated against
-the full ~770-bill historical dataset before relying on it (see
-`app/ingestion/singapore_parliament.py`).
+fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, the UK, India, France, Germany,
+Singapore, and Mexico have no such flag, so they fall back to keyword matching. Canada's is
+matched against the bill's full legislative summary as well as its title (Canadian tax bills are
+often titled generically, e.g. "Budget Implementation Act, 2026, No. 1"). Spain's, France's,
+Germany's, and Mexico's titles are in Spanish/French/German, so separate
+`SPANISH_TAX_KEYWORDS`/`FRENCH_TAX_KEYWORDS`/`GERMAN_TAX_KEYWORDS`/`MEXICO_TAX_KEYWORDS` lists are
+matched against the title (Spain: title only, no legislative-summary text is available from that
+source; France: title only too — see below; Germany: title and abstract, like Canada — see
+below). The UK's, India's, and France's main annual tax bill are all literally titled some
+variant of "Finance Bill" ("Projet de loi de finances" in French) with no "tax" wording at all,
+so that's special-cased the same way Congress.gov's policy-area flag is, ahead of the keyword
+fallback, for all three. Germany needs no such special case: German compounds tax terms directly
+into the word itself, so even its own annual omnibus tax act ("Jahressteuergesetz") already
+contains "steuer" as a literal substring — confirmed by checking every title in a real
+Wahlperiode-21 pull for false positives before relying on it (see
+`app/ingestion/germany_bundestag.py`). Singapore is English-speaking, but its bill titles
+surfaced a substring pitfall the shared `matching_keywords()` helper doesn't guard against: a
+real bill titled "Third-Party Taxi Booking Service Providers Bill" contains "tax" inside "Taxi".
+`SINGAPORE_TAX_KEYWORDS` is matched with a whole-word regex instead of plain substring matching
+to avoid that (and equivalents like "duty"/"gst"/"customs"), validated against the full ~770-bill
+historical dataset before relying on it (see `app/ingestion/singapore_parliament.py`). Mexico hit
+an even sharper version of the same problem: Spanish "fiscal" means both "tax-related" (Código
+Fiscal, Coordinación Fiscal) and "prosecutorial/audit" (Fiscalía General, fiscalización) — real
+homonyms, not just a shared substring — so `MEXICO_TAX_KEYWORDS` also uses whole-word matching,
+which resolves it cleanly since "fiscalía"/"fiscalización" extend past the word boundary;
+"hacienda" was deliberately left out of the list after checking its real matches turned out to
+all be non-tax bills (see `app/ingestion/mexico_diputados.py`).
 
 Canada re-pulls the current Parliament session's full bill list every run (a single request,
 ~200 bills), but only re-fetches per-bill detail — where the status timeline and legislative
@@ -127,6 +134,23 @@ URL), which is called out here rather than left implicit. No legislative-summary
 data is exposed, and there's no per-bill deep link (`source_url` falls back to the bills-introduced
 page itself, like Spain), but each bill's actual PDF is directly linkable via a stable
 UUID-keyed media endpoint (see `app/ingestion/singapore_parliament.py`).
+
+Mexico's Chamber of Deputies has no official structured bill API either — its own legislative-
+tracking portal (`sil.gobernacion.gob.mx`) redirects to a domain (`nsil.gobernacion.gob.mx`) that
+no longer resolves — so this adapter uses "Gaceta Parlamentaria" instead: the Chamber's official
+legislative record, whose iniciativas (bills) index page links out to one plain server-rendered
+HTML page per legislative period, each listing every bill introduced in that period with its
+title, sponsor, committee referral, and a dated link into that day's Gaceta issue. Like Spain's
+site, this needed no headless browser -- just handling the page's original iso-8859-1 encoding,
+which isn't declared in the HTTP response's `Content-Type` header (only the page's own `<meta>`
+tag, which `httpx` doesn't inspect, so it's set explicitly). The index page goes back to 1997;
+the adapter dynamically follows only the numerically highest ("current") legislature's period
+links rather than a hardcoded value, since the index page itself exposes it -- self-updating
+across a legislature change, unlike Spain's/Germany's `legislature` settings, which have no such
+signal to derive it from. A legislature's full history to date (~9 period pages, ~7,000 bills as
+of the LXVI legislature) is re-pulled every run, since no incremental filter is exposed; given
+that volume, this is in the "heavy" adapter tier alongside California/France rather than
+alongside Spain/UK/Germany/Singapore (see `app/ingestion/mexico_diputados.py`).
 
 California only publishes a full session snapshot once a day (its smaller daily delta file
 omits bill titles/subjects), so it's ingested on its own, longer schedule rather than the
@@ -213,7 +237,7 @@ Or scope it to specific sources:
 
 ```
 uv run scripts/run_scrape_once.py FEDERAL
-uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA FRANCE GERMANY SINGAPORE
+uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA FRANCE GERMANY SINGAPORE MEXICO
 uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 ```
 
@@ -264,6 +288,7 @@ app/
 │   ├── france_assemblee.py
 │   ├── germany_bundestag.py
 │   ├── singapore_parliament.py
+│   ├── mexico_diputados.py
 │   ├── tax_filter.py           # Shared tax-relevance rules
 │   ├── diff.py                  # Bill insert/update + change detection
 │   ├── publications_base.py      # NormalizedPublication / PublicationSourceAdapter protocol

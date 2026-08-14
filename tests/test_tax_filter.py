@@ -4,6 +4,7 @@ from app.ingestion.tax_filter import (
     is_tax_relevant_france,
     is_tax_relevant_germany,
     is_tax_relevant_india,
+    is_tax_relevant_mexico,
     is_tax_relevant_ny,
     is_tax_relevant_singapore,
     is_tax_relevant_spain,
@@ -186,5 +187,52 @@ def test_singapore_taxi_is_not_a_false_positive():
 
 def test_singapore_not_relevant():
     relevant, matched = is_tax_relevant_singapore("Protection from Online Falsehoods and Manipulation Bill")
+    assert relevant is False
+    assert matched == []
+
+
+def test_mexico_keyword_match_on_title():
+    relevant, matched = is_tax_relevant_mexico(
+        "Que reforma el artículo 2o.-A de la Ley del Impuesto al Valor Agregado, para reducir el IVA"
+    )
+    assert relevant is True
+    assert "iva" in matched
+    assert "impuesto" in matched
+
+
+def test_mexico_fiscal_word_boundary_matches_genuine_tax_law():
+    relevant, matched = is_tax_relevant_mexico(
+        "Que reforma el artículo 22 del Código Fiscal de la Federación, con el objeto de que las "
+        "devoluciones del IVA se realicen a más tardar a los 15 días"
+    )
+    assert relevant is True
+    assert "fiscal" in matched
+
+
+def test_mexico_fiscalia_and_fiscalizacion_are_not_false_positives():
+    # "fiscalía" (prosecutor's office) and "fiscalización" (government
+    # auditing) both contain "fiscal" as a substring but are unrelated to
+    # tax law -- confirmed against real bill titles that whole-word
+    # matching correctly excludes both.
+    relevant, matched = is_tax_relevant_mexico(
+        "Que reforma el artículo 102 de la Constitución, a fin de crear la Fiscalía General "
+        "para la atención de delitos electorales"
+    )
+    assert relevant is False
+    assert matched == []
+
+    relevant, matched = is_tax_relevant_mexico(
+        "Que reforma los artículos 6o. y 79 de la Constitución, para permitir la fiscalización "
+        "de obras públicas cuando existan indicios de corrupción"
+    )
+    assert relevant is False
+    assert matched == []
+
+
+def test_mexico_not_relevant():
+    relevant, matched = is_tax_relevant_mexico(
+        "Que reforma el artículo 28 de la Constitución Política de los Estados Unidos Mexicanos, "
+        "en materia de transportes"
+    )
     assert relevant is False
     assert matched == []

@@ -12,6 +12,7 @@ from app.ingestion.france_assemblee import FranceAssembleeAdapter
 from app.ingestion.germany_bundestag import GermanyBundestagAdapter
 from app.ingestion.india_prs import IndiaPrsAdapter
 from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
+from app.ingestion.mexico_diputados import MexicoDiputadosAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
 from app.ingestion.publications_base import PublicationSourceAdapter
 from app.ingestion.pwc_tax_library import PwcTaxLibraryAdapter
@@ -97,6 +98,12 @@ def build_heavy_adapters(settings: Settings) -> list[SourceAdapter]:
             base_url=settings.france_an_base_url,
             legislature=settings.france_an_legislature,
         ),
+        # No auth required; unlike the other Gaceta-style HTML sources, this
+        # re-pulls the current legislature's FULL history every run (~9
+        # period pages, ~7,000 bills as of the LXVI legislature) since no
+        # incremental filter is exposed -- large enough to belong here
+        # rather than in the light tier (see app/ingestion/mexico_diputados.py).
+        MexicoDiputadosAdapter(base_url=settings.mexico_diputados_base_url),
     ]
 
 
