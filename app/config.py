@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     # Assembly every few years, so this is expected to need updating
     # periodically, same as Spain's `legislature` setting.
     france_an_legislature: str = "17"
+    germany_bundestag_base_url: str = "https://search.dip.bundestag.de/api/v1"
+    # DIP's own publicly-documented demo key (see app/ingestion/germany_bundestag.py).
+    germany_bundestag_api_key: str = "R2BZaee.DjdCyihKZMf8AOjtScubP2EVydegzjmBIQ"
+    # "21" = 21st Bundestag (2025-present). Germany elects a new Bundestag
+    # every few years, so this is expected to need updating periodically,
+    # same as Spain's/France's `legislature` settings.
+    germany_bundestag_wahlperiode: str = "21"
     pwc_tax_library_base_url: str = "https://www.pwc.com"
     ey_tax_alerts_base_url: str = "https://api-search.ey.com"
     kpmg_taxnewsflash_europe_base_url: str = "https://kpmg.com"

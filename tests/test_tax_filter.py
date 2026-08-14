@@ -2,6 +2,7 @@ from app.ingestion.tax_filter import (
     is_tax_relevant_ca,
     is_tax_relevant_federal,
     is_tax_relevant_france,
+    is_tax_relevant_germany,
     is_tax_relevant_india,
     is_tax_relevant_ny,
     is_tax_relevant_spain,
@@ -129,6 +130,29 @@ def test_france_keyword_fallback():
 def test_france_not_relevant():
     relevant, matched = is_tax_relevant_france(
         "Proposition de loi visant à favoriser la participation à la vie démocratique"
+    )
+    assert relevant is False
+    assert matched == []
+
+
+def test_germany_keyword_match_on_title():
+    relevant, matched = is_tax_relevant_germany("Gesetz zur Änderung des Einkommensteuergesetzes")
+    assert relevant is True
+    assert "steuer" in matched
+
+
+def test_germany_keyword_match_on_abstract():
+    relevant, matched = is_tax_relevant_germany(
+        "Gesetz über die Feststellung des Bundeshaushaltsplans",
+        "Änderung der Abgabenordnung zur Verhinderung von Missbrauch",
+    )
+    assert relevant is True
+    assert "abgabe" in matched
+
+
+def test_germany_not_relevant():
+    relevant, matched = is_tax_relevant_germany(
+        "Gesetz über die Feststellung des Bundeshaushaltsplans für das Haushaltsjahr 2026"
     )
     assert relevant is False
     assert matched == []

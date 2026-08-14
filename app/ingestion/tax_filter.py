@@ -171,3 +171,40 @@ def is_tax_relevant_france(title: str) -> tuple[bool, list[str]]:
         return True, ["finance_bill"]
     matched = matching_keywords_fr(title)
     return bool(matched), matched
+
+
+# `TAX_KEYWORDS` is English-only, so it can't be reused for German-language
+# titles (Bundestag DIP; see app/ingestion/germany_bundestag.py). Unlike the
+# UK/India/France, German tax bill titles don't need a separate "Finance
+# Bill"-style special case: even Germany's own annual omnibus tax act
+# ("Jahressteuergesetz") already contains "steuer" as a substring, since
+# German compounds tax terms directly into the word (e.g.
+# "Einkommensteuergesetz", "Erbschaftsteuernichterhebungsgesetz") rather than
+# using a generic un-tax-sounding name.
+GERMAN_TAX_KEYWORDS = [
+    "steuer",
+    "steuern",
+    "steuerlich",
+    "steuerliche",
+    "steuerrecht",
+    "besteuerung",
+    "abgabe",
+    "abgaben",
+    "zoll",
+    "zölle",
+    "mehrwertsteuer",
+    "umsatzsteuer",
+    "einkommensteuer",
+    "körperschaftsteuer",
+    "gewerbesteuer",
+]
+
+
+def matching_keywords_de(*texts: str | None) -> list[str]:
+    haystack = " ".join(t.lower() for t in texts if t)
+    return sorted({kw for kw in GERMAN_TAX_KEYWORDS if kw in haystack})
+
+
+def is_tax_relevant_germany(title: str, summary: str | None = None) -> tuple[bool, list[str]]:
+    matched = matching_keywords_de(title, summary)
+    return bool(matched), matched

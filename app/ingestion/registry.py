@@ -9,6 +9,7 @@ from app.ingestion.canada_legisinfo import CanadaLegisinfoAdapter
 from app.ingestion.congress_gov import CongressGovAdapter
 from app.ingestion.ey_tax_alerts import EyTaxAlertsAdapter
 from app.ingestion.france_assemblee import FranceAssembleeAdapter
+from app.ingestion.germany_bundestag import GermanyBundestagAdapter
 from app.ingestion.india_prs import IndiaPrsAdapter
 from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
@@ -60,6 +61,19 @@ def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
     # app/ingestion/india_prs.py). Full listing re-pulled every run, detail
     # fetched only for likely-relevant bills.
     adapters.append(IndiaPrsAdapter(base_url=settings.india_prs_base_url))
+
+    # Requires an API key (DIP's own publicly-documented demo key by
+    # default -- see app/ingestion/germany_bundestag.py); bounded
+    # current-term dataset re-pulled in full every run, like Spain/UK, but
+    # with the list endpoint's own `f.aktualisiert.start` filter applied
+    # when `since` is available.
+    adapters.append(
+        GermanyBundestagAdapter(
+            base_url=settings.germany_bundestag_base_url,
+            api_key=settings.germany_bundestag_api_key,
+            wahlperiode=settings.germany_bundestag_wahlperiode,
+        )
+    )
 
     return adapters
 

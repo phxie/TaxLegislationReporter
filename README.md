@@ -17,19 +17,25 @@ from federal, state, and secondary sources into a single searchable web dashboar
 | United Kingdom (national) | [UK Parliament Bills API](https://bills-api.parliament.uk/) | No auth required |
 | India (national) | [PRS Legislative Research — Bills Track](https://prsindia.org/billtrack) | No auth required |
 | France (national) | [Assemblée Nationale — Open Data](https://data.assemblee-nationale.fr/) | No auth required |
+| Germany (national) | [Bundestag DIP API](https://dip.bundestag.de/) | Free API key required (a public demo key ships as the default — see below) |
 
 Bills are filtered to tax-relevant ones using each source's own tax signal where available
 (Congress.gov policy area "Taxation", California's `taxlevy` flag) with a shared keyword
-fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, the UK, India, and France have no
-such flag, so they fall back to keyword matching. Canada's is matched against the bill's full
-legislative summary as well as its title (Canadian tax bills are often titled generically, e.g.
-"Budget Implementation Act, 2026, No. 1"). Spain's and France's titles are in Spanish/French, so
-separate `SPANISH_TAX_KEYWORDS`/`FRENCH_TAX_KEYWORDS` lists are matched against the title (Spain:
-title only, no legislative-summary text is available from that source; France: title only too —
-see below). The UK's, India's, and France's main annual tax bill are all literally titled some
-variant of "Finance Bill" ("Projet de loi de finances" in French) with no "tax" wording at all,
-so that's special-cased the same way Congress.gov's policy-area flag is, ahead of the keyword
-fallback, for all three.
+fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, the UK, India, France, and Germany
+have no such flag, so they fall back to keyword matching. Canada's is matched against the bill's
+full legislative summary as well as its title (Canadian tax bills are often titled generically,
+e.g. "Budget Implementation Act, 2026, No. 1"). Spain's, France's, and Germany's titles are in
+Spanish/French/German, so separate `SPANISH_TAX_KEYWORDS`/`FRENCH_TAX_KEYWORDS`/
+`GERMAN_TAX_KEYWORDS` lists are matched against the title (Spain: title only, no
+legislative-summary text is available from that source; France: title only too — see below;
+Germany: title and abstract, like Canada — see below). The UK's, India's, and France's main
+annual tax bill are all literally titled some variant of "Finance Bill" ("Projet de loi de
+finances" in French) with no "tax" wording at all, so that's special-cased the same way
+Congress.gov's policy-area flag is, ahead of the keyword fallback, for all three. Germany needs
+no such special case: German compounds tax terms directly into the word itself, so even its own
+annual omnibus tax act ("Jahressteuergesetz") already contains "steuer" as a literal substring —
+confirmed by checking every title in a real Wahlperiode-21 pull for false positives before
+relying on it (see `app/ingestion/germany_bundestag.py`).
 
 Canada re-pulls the current Parliament session's full bill list every run (a single request,
 ~200 bills), but only re-fetches per-bill detail — where the status timeline and legislative
@@ -82,6 +88,21 @@ discriminated by an `@xsi:type` field — only `DossierLegislatif_Type` is kept.
 summary text is exposed here either, so the procedure label (e.g. "Proposition de loi ordinaire")
 stands in for `summary`, and sponsor names aren't resolved (they're actor-ID references into a
 separate, un-joined dataset) (see `app/ingestion/france_assemblee.py`).
+
+Germany's Bundestag publishes DIP (Dokumentations- und Informationssystem für
+Parlamentsmaterialien), an official, documented REST API with an OpenAPI spec — but unlike every
+other non-US source above, it requires an API key on every request. The adapter's default key is
+DIP's own publicly-documented demo key, embedded in that same OpenAPI spec's security-scheme
+description and auto-preauthorized for every visitor to DIP's own Swagger UI — a shared, openly
+published testing credential rather than a secret, though heavy users are expected to apply for
+their own free key per DIP's terms. The `/vorgang` (legislative proceeding) list endpoint
+supports the same updated-since filter as Canada's LEGISinfo (`f.aktualisiert.start`) and already
+includes each item's summary (`abstract`) in the list response itself, so — better than the UK's
+situation — the tax-relevance pre-filter needs no extra per-item request at all before deciding
+whether the (still separate) `/vorgangsposition` status-timeline fetch is worth making. The
+current electoral term (Wahlperiode 21) is a bounded dataset (~400 Gesetzgebung proceedings), so,
+like Spain/UK, a full run re-pulls the whole list, filtered incrementally when `since` is
+available (see `app/ingestion/germany_bundestag.py`).
 
 California only publishes a full session snapshot once a day (its smaller daily delta file
 omits bill titles/subjects), so it's ingested on its own, longer schedule rather than the
@@ -143,8 +164,12 @@ doesn't get re-billed by every subsequent run.
    - `NY_SENATE_API_KEY` — get one at https://legislation.nysenate.gov/static/docs/html/index.html
    - `ANTHROPIC_API_KEY` — get one at https://console.anthropic.com/ (only needed for the
      `ai_summary` field on publications; see Sources above)
+   - `GERMANY_BUNDESTAG_API_KEY` — optional; `GermanyBundestagAdapter` ships with a working
+     default (DIP's own public demo key, see Sources above), but heavy users should apply for
+     their own free key at https://dip.bundestag.de/ueber-dip/hilfe/api
 
-   Sources without a configured key are skipped automatically (a warning is logged).
+   Sources without a configured key are skipped automatically (a warning is logged) — this
+   doesn't apply to Germany, since it has a usable built-in default.
 
 4. Run database migrations:
 
@@ -164,7 +189,7 @@ Or scope it to specific sources:
 
 ```
 uv run scripts/run_scrape_once.py FEDERAL
-uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA FRANCE
+uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA FRANCE GERMANY
 uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 ```
 
@@ -213,6 +238,7 @@ app/
 │   ├── uk_parliament.py
 │   ├── india_prs.py
 │   ├── france_assemblee.py
+│   ├── germany_bundestag.py
 │   ├── tax_filter.py           # Shared tax-relevance rules
 │   ├── diff.py                  # Bill insert/update + change detection
 │   ├── publications_base.py      # NormalizedPublication / PublicationSourceAdapter protocol
