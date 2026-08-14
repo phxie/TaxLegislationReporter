@@ -18,14 +18,15 @@ from federal, state, and secondary sources into a single searchable web dashboar
 | India (national) | [PRS Legislative Research — Bills Track](https://prsindia.org/billtrack) | No auth required |
 | France (national) | [Assemblée Nationale — Open Data](https://data.assemblee-nationale.fr/) | No auth required |
 | Germany (national) | [Bundestag DIP API](https://dip.bundestag.de/) | Free API key required (a public demo key ships as the default — see below) |
+| Singapore (national) | [Parliament of Singapore — Bills Introduced](https://www.parliament.gov.sg/parliamentary-business/bills-introduced) | No auth required |
 
 Bills are filtered to tax-relevant ones using each source's own tax signal where available
 (Congress.gov policy area "Taxation", California's `taxlevy` flag) with a shared keyword
-fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, the UK, India, France, and Germany
-have no such flag, so they fall back to keyword matching. Canada's is matched against the bill's
-full legislative summary as well as its title (Canadian tax bills are often titled generically,
-e.g. "Budget Implementation Act, 2026, No. 1"). Spain's, France's, and Germany's titles are in
-Spanish/French/German, so separate `SPANISH_TAX_KEYWORDS`/`FRENCH_TAX_KEYWORDS`/
+fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, the UK, India, France, Germany, and
+Singapore have no such flag, so they fall back to keyword matching. Canada's is matched against
+the bill's full legislative summary as well as its title (Canadian tax bills are often titled
+generically, e.g. "Budget Implementation Act, 2026, No. 1"). Spain's, France's, and Germany's
+titles are in Spanish/French/German, so separate `SPANISH_TAX_KEYWORDS`/`FRENCH_TAX_KEYWORDS`/
 `GERMAN_TAX_KEYWORDS` lists are matched against the title (Spain: title only, no
 legislative-summary text is available from that source; France: title only too — see below;
 Germany: title and abstract, like Canada — see below). The UK's, India's, and France's main
@@ -35,7 +36,13 @@ Congress.gov's policy-area flag is, ahead of the keyword fallback, for all three
 no such special case: German compounds tax terms directly into the word itself, so even its own
 annual omnibus tax act ("Jahressteuergesetz") already contains "steuer" as a literal substring —
 confirmed by checking every title in a real Wahlperiode-21 pull for false positives before
-relying on it (see `app/ingestion/germany_bundestag.py`).
+relying on it (see `app/ingestion/germany_bundestag.py`). Singapore is English-speaking, but its
+bill titles surfaced a substring pitfall the shared `matching_keywords()` helper doesn't guard
+against: a real bill titled "Third-Party Taxi Booking Service Providers Bill" contains "tax"
+inside "Taxi". `SINGAPORE_TAX_KEYWORDS` is matched with a whole-word regex instead of plain
+substring matching to avoid that (and equivalents like "duty"/"gst"/"customs"), validated against
+the full ~770-bill historical dataset before relying on it (see
+`app/ingestion/singapore_parliament.py`).
 
 Canada re-pulls the current Parliament session's full bill list every run (a single request,
 ~200 bills), but only re-fetches per-bill detail — where the status timeline and legislative
@@ -103,6 +110,23 @@ whether the (still separate) `/vorgangsposition` status-timeline fetch is worth 
 current electoral term (Wahlperiode 21) is a bounded dataset (~400 Gesetzgebung proceedings), so,
 like Spain/UK, a full run re-pulls the whole list, filtered incrementally when `since` is
 available (see `app/ingestion/germany_bundestag.py`).
+
+Singapore's Parliament site has no documented API and, unlike every other undocumented-endpoint
+source above, isn't a plain REST/JSON backend either: it's a Next.js App Router site where the
+bill list's pagination is wired to a React Server Action rather than a URL or query params,
+invoked by POSTing back to the page itself with a `Next-Action: <id>` header, where `<id>` is a
+content hash of the current JS build. This was found with a throwaway Playwright spike (removed
+again afterwards, same as the PwC adapter's precedent — it's not a runtime dependency) to capture
+the browser's real request, since the extra pages aren't present in any static HTML. The adapter
+re-discovers the current `<id>` on every run — fetching the page, then scanning its referenced JS
+chunks for the `createServerReference(...)` call that names it — rather than hardcoding a value
+that would silently go stale on the site's next deploy; if the site's framework or that action's
+name ever changes, discovery raises loudly instead of returning nothing. This makes Singapore the
+most fragile source in this project (coupled to Next.js's build output shape, not just a stable
+URL), which is called out here rather than left implicit. No legislative-summary text or sponsor
+data is exposed, and there's no per-bill deep link (`source_url` falls back to the bills-introduced
+page itself, like Spain), but each bill's actual PDF is directly linkable via a stable
+UUID-keyed media endpoint (see `app/ingestion/singapore_parliament.py`).
 
 California only publishes a full session snapshot once a day (its smaller daily delta file
 omits bill titles/subjects), so it's ingested on its own, longer schedule rather than the
@@ -189,7 +213,7 @@ Or scope it to specific sources:
 
 ```
 uv run scripts/run_scrape_once.py FEDERAL
-uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA FRANCE GERMANY
+uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA FRANCE GERMANY SINGAPORE
 uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 ```
 
@@ -239,6 +263,7 @@ app/
 │   ├── india_prs.py
 │   ├── france_assemblee.py
 │   ├── germany_bundestag.py
+│   ├── singapore_parliament.py
 │   ├── tax_filter.py           # Shared tax-relevance rules
 │   ├── diff.py                  # Bill insert/update + change detection
 │   ├── publications_base.py      # NormalizedPublication / PublicationSourceAdapter protocol

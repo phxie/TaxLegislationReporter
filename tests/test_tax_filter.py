@@ -5,6 +5,7 @@ from app.ingestion.tax_filter import (
     is_tax_relevant_germany,
     is_tax_relevant_india,
     is_tax_relevant_ny,
+    is_tax_relevant_singapore,
     is_tax_relevant_spain,
     is_tax_relevant_uk,
     matching_keywords,
@@ -154,5 +155,36 @@ def test_germany_not_relevant():
     relevant, matched = is_tax_relevant_germany(
         "Gesetz über die Feststellung des Bundeshaushaltsplans für das Haushaltsjahr 2026"
     )
+    assert relevant is False
+    assert matched == []
+
+
+def test_singapore_keyword_match_on_title():
+    relevant, matched = is_tax_relevant_singapore("Goods and Services Tax (Amendment) Bill")
+    assert relevant is True
+    assert "tax" in matched
+
+
+def test_singapore_duty_and_customs_keywords_match():
+    relevant, matched = is_tax_relevant_singapore("Stamp Duties (Amendment) Bill")
+    assert relevant is True
+    assert "duties" in matched
+
+    relevant, matched = is_tax_relevant_singapore("Customs (Amendment) Bill")
+    assert relevant is True
+    assert "customs" in matched
+
+
+def test_singapore_taxi_is_not_a_false_positive():
+    # Real title from the live source -- "Taxi" contains "tax" as a
+    # substring, which is exactly why this uses word-boundary matching
+    # instead of the shared substring-based matching_keywords().
+    relevant, matched = is_tax_relevant_singapore("Third-Party Taxi Booking Service Providers Bill")
+    assert relevant is False
+    assert matched == []
+
+
+def test_singapore_not_relevant():
+    relevant, matched = is_tax_relevant_singapore("Protection from Online Falsehoods and Manipulation Bill")
     assert relevant is False
     assert matched == []

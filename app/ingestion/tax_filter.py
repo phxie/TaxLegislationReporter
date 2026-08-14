@@ -208,3 +208,41 @@ def matching_keywords_de(*texts: str | None) -> list[str]:
 def is_tax_relevant_germany(title: str, summary: str | None = None) -> tuple[bool, list[str]]:
     matched = matching_keywords_de(title, summary)
     return bool(matched), matched
+
+
+# Singapore is English-speaking, so this could in principle reuse the shared
+# `TAX_KEYWORDS`/`matching_keywords()` above -- but that's a plain substring
+# match, and Singapore's real bill titles surfaced a substring false
+# positive the other English sources never happened to hit: "Third-Party
+# Taxi Booking Service Providers Bill" contains "tax" inside "Taxi". Verified
+# against the full ~770-bill historical dataset (see
+# app/ingestion/singapore_parliament.py) that whole-word matching produces
+# zero false positives/negatives, so Singapore gets its own word-boundary
+# regex instead of the shared substring helper.
+SINGAPORE_TAX_KEYWORDS = [
+    "tax",
+    "taxes",
+    "taxation",
+    "taxable",
+    "duty",
+    "duties",
+    "gst",
+    "customs",
+    "excise",
+    "levy",
+    "levies",
+    "revenue",
+    "tariff",
+    "tariffs",
+]
+
+_SINGAPORE_TAX_WORD_RE = re.compile(
+    r"\b(" + "|".join(re.escape(kw) for kw in SINGAPORE_TAX_KEYWORDS) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def is_tax_relevant_singapore(title: str, summary: str | None = None) -> tuple[bool, list[str]]:
+    haystack = " ".join(t for t in (title, summary) if t)
+    matched = sorted({m.lower() for m in _SINGAPORE_TAX_WORD_RE.findall(haystack)})
+    return bool(matched), matched

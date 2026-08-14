@@ -15,6 +15,7 @@ from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
 from app.ingestion.publications_base import PublicationSourceAdapter
 from app.ingestion.pwc_tax_library import PwcTaxLibraryAdapter
+from app.ingestion.singapore_parliament import SingaporeParliamentAdapter
 from app.ingestion.spain_congreso import SpainCongresoAdapter
 from app.ingestion.uk_parliament import UkParliamentAdapter
 
@@ -74,6 +75,13 @@ def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
             wahlperiode=settings.germany_bundestag_wahlperiode,
         )
     )
+
+    # No auth required; small dataset (~800 bills spanning ~20 years, no
+    # incremental filter exposed) re-pulled in full every run, like
+    # Spain/UK/Germany. See app/ingestion/singapore_parliament.py for why
+    # this one is more fragile than the others (coupled to a Next.js build
+    # artifact, not just a stable URL).
+    adapters.append(SingaporeParliamentAdapter(base_url=settings.singapore_parliament_base_url))
 
     return adapters
 
