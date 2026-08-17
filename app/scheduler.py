@@ -15,7 +15,7 @@ from app.ingestion.registry import (
     build_light_adapters,
     build_publication_adapters,
 )
-from app.ingestion.summarize import run_pending_summaries
+from app.ingestion.summarize import run_pending_bill_summaries, run_pending_summaries
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ def _run_light_sources(settings: Settings) -> None:
     db = SessionLocal()
     try:
         run_all(db, adapters)
+        _run_pending_bill_summaries(settings, db)
     finally:
         db.close()
 
@@ -38,6 +39,7 @@ def _run_heavy_sources(settings: Settings) -> None:
     db = SessionLocal()
     try:
         run_all(db, adapters)
+        _run_pending_bill_summaries(settings, db)
     finally:
         db.close()
 
@@ -60,6 +62,20 @@ def _run_pending_summaries(settings: Settings, db: Session) -> None:
         return
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
     run_pending_summaries(
+        db,
+        client,
+        batch_size=settings.ai_summary_batch_size,
+        stale_after=dt.timedelta(hours=settings.ai_summary_stale_after_hours),
+        max_wait_seconds=settings.ai_summary_max_wait_seconds,
+    )
+
+
+def _run_pending_bill_summaries(settings: Settings, db: Session) -> None:
+    if not settings.anthropic_api_key:
+        logger.warning("ANTHROPIC_API_KEY not set; skipping bill AI summaries")
+        return
+    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    run_pending_bill_summaries(
         db,
         client,
         batch_size=settings.ai_summary_batch_size,

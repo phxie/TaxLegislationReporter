@@ -67,6 +67,18 @@ class Bill(Base):
     tax_keywords_matched: Mapped[list | None] = mapped_column(JSONB, default=None)
     raw_source_payload: Mapped[dict | None] = mapped_column(JSONB, default=None)
 
+    # LLM-generated summary (Claude Haiku via the Batches API, see
+    # app/ingestion/summarize.py) -- same mechanism as `Publication.ai_summary`.
+    # `ai_summary_requested_at` is set when a batch entry is submitted for
+    # this row and left in place if the batch times out or the item fails,
+    # so a later run only retries it once `ai_summary_requested_at` falls
+    # outside the staleness window rather than resubmitting (and re-billing)
+    # it every run.
+    ai_summary: Mapped[str | None] = mapped_column(default=None)
+    ai_summary_requested_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
+
     first_seen_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

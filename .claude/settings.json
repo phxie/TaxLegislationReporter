@@ -35,7 +35,8 @@
       "Bash(python3 -c ' *)",
       "Bash(uv --directory 'c:\\\\Users\\\\teemo\\\\OneDrive\\\\Desktop\\\\TaxLegislationReporter' run python -c ' *)",
       "Bash(curl -sI \"https://gaceta.diputados.gob.mx/gp_iniciativas.html\")",
-      "Bash(curl -s \"http://127.0.0.1:8123/bills/MEXICO/66/1029\" -o /tmp/mx_detail.html -w \"%{http_code}\\\\n\")"
+      "Bash(curl -s \"http://127.0.0.1:8123/bills/MEXICO/66/1029\" -o /tmp/mx_detail.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s \"http://127.0.0.1:8124/bills/MEXICO/66/6117\" -o /tmp/ai_detail_check.html -w \"%{http_code}\\\\n\")"
     ]
   }
 }

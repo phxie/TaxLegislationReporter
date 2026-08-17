@@ -9,6 +9,13 @@
   <p>{{ bill.title }}</p>
   {% if bill.summary and bill.summary != bill.title %}<p>{{ bill.summary }}</p>{% endif %}
 
+  {% if bill.ai_summary %}
+  <blockquote>
+    <strong>AI summary</strong>
+    <p>{{ bill.ai_summary }}</p>
+  </blockquote>
+  {% endif %}
+
   <table>
     <tbody>
       <tr><th>Status</th><td>{{ bill.status_text or "-" }}</td></tr>

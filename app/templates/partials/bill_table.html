@@ -6,6 +6,7 @@
       <th>Title</th>
       <th>Status</th>
       <th>Last action</th>
+      <th>AI Summary</th>
       <th>Source</th>
     </tr>
   </thead>
@@ -17,10 +18,20 @@
       <td>{{ bill.title }}</td>
       <td>{{ bill.status_text or "-" }}</td>
       <td>{{ bill.last_action_date or "-" }}</td>
+      <td>
+        {% if bill.ai_summary %}
+        <details>
+          <summary>Show</summary>
+          <p>{{ bill.ai_summary }}</p>
+        </details>
+        {% else %}
+        -
+        {% endif %}
+      </td>
       <td>{{ bill.source_label }}</td>
     </tr>
     {% else %}
-    <tr><td colspan="6"><em>No bills match the current filters.</em></td></tr>
+    <tr><td colspan="7"><em>No bills match the current filters.</em></td></tr>
     {% endfor %}
   </tbody>
 </table>

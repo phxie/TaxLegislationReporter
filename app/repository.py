@@ -49,6 +49,22 @@ def get_bill(db: Session, jurisdiction: str, source_bill_id: str, session: str) 
     return db.scalars(stmt).first()
 
 
+def list_bills_needing_summary(db: Session, *, limit: int, stale_before: dt.datetime) -> list[Bill]:
+    """Bills with no AI summary yet, excluding ones whose summary was
+    requested recently (a batch may still be in flight for them).
+    """
+    stmt = (
+        select(Bill)
+        .where(
+            Bill.ai_summary.is_(None),
+            (Bill.ai_summary_requested_at.is_(None)) | (Bill.ai_summary_requested_at < stale_before),
+        )
+        .order_by(Bill.first_seen_at.desc())
+        .limit(limit)
+    )
+    return list(db.scalars(stmt).all())
+
+
 def recent_changes(db: Session, *, since: dt.datetime | None = None, limit: int = 50) -> list[BillChange]:
     stmt = (
         select(BillChange)

@@ -29,6 +29,19 @@ def test_build_batch_requests_includes_title_and_content():
     assert "no summary/description available" in prompt_2
 
 
+def test_build_batch_requests_uses_bill_prompt_template_when_given():
+    candidates = [SummaryCandidate(id=1, title="Income Tax (Amendment) Bill", content="Raises the rate.")]
+
+    requests = build_batch_requests(candidates, prompt_template=summarize.BILL_PROMPT_TEMPLATE)
+
+    prompt = requests[0]["params"]["messages"][0]["content"]
+    assert "piece of tax legislation" in prompt
+    assert "Income Tax (Amendment) Bill" in prompt
+    assert "Raises the rate." in prompt
+    # The publication-flavored wording shouldn't leak into the bill prompt.
+    assert "article" not in prompt
+
+
 @dataclass
 class _FakeBatch:
     processing_status: str

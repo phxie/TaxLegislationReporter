@@ -183,6 +183,17 @@ summary, waiting up to `AI_SUMMARY_MAX_WAIT_SECONDS` for it to finish. Items a b
 are left alone (not resubmitted) until `AI_SUMMARY_STALE_AFTER_HOURS` passes, so a slow batch
 doesn't get re-billed by every subsequent run.
 
+Bills get the same `ai_summary` treatment, generated from the bill's title and its own
+(source-provided) legislative summary where one exists — useful even for the non-English sources
+above, since Claude summarizes a Spanish/French/German title in English fine on its own. It uses
+a bill-specific prompt (`BILL_PROMPT_TEMPLATE` in `summarize.py`) but otherwise shares the exact
+same batch/poll/staleness machinery as publications (`Bill` and `Publication` expose the same
+`id`/`title`/`summary`/`ai_summary`/`ai_summary_requested_at` shape, so the submit/poll/write-back
+flow itself doesn't need to know which one it's given — see `_run_summary_batch`). It runs as the
+last step of both the light- and heavy-source ingestion jobs, since bills come from both tiers;
+each just submits a batch for whatever's still outstanding, so running it twice on the same cycle
+is harmless.
+
 ## Requirements
 
 - [uv](https://docs.astral.sh/uv/) for Python/dependency management
@@ -211,7 +222,7 @@ doesn't get re-billed by every subsequent run.
    - `CONGRESS_API_KEY` — get one at https://api.congress.gov/sign-up/
    - `NY_SENATE_API_KEY` — get one at https://legislation.nysenate.gov/static/docs/html/index.html
    - `ANTHROPIC_API_KEY` — get one at https://console.anthropic.com/ (only needed for the
-     `ai_summary` field on publications; see Sources above)
+     `ai_summary` field on bills and publications; see Sources above)
    - `GERMANY_BUNDESTAG_API_KEY` — optional; `GermanyBundestagAdapter` ships with a working
      default (DIP's own public demo key, see Sources above), but heavy users should apply for
      their own free key at https://dip.bundestag.de/ueber-dip/hilfe/api
@@ -297,7 +308,7 @@ app/
 │   ├── pwc_tax_library.py
 │   ├── ey_tax_alerts.py
 │   ├── kpmg_taxnewsflash_europe.py
-│   ├── summarize.py                 # AI summary generation for publications (Claude Haiku, Batches API)
+│   ├── summarize.py                 # AI summary generation for bills + publications (Claude Haiku, Batches API)
 │   ├── pipeline.py                 # run_all()/run_all_publications() — ingestion entry points
 │   └── registry.py                 # Builds adapters from Settings
 ├── routes/               # dashboard, bills, feed, publications
