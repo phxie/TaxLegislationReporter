@@ -293,3 +293,57 @@ def is_tax_relevant_mexico(title: str, summary: str | None = None) -> tuple[bool
     haystack = " ".join(t for t in (title, summary) if t)
     matched = sorted({m.lower() for m in _MEXICO_TAX_WORD_RE.findall(haystack)})
     return bool(matched), matched
+
+
+# Portuguese hits two of the same substring problems as Mexican Spanish, plus
+# a third with no substring fix at all. (1) "fiscal" is again a homonym with
+# unrelated "fiscalização" (government oversight/auditing) -- solved the
+# same way as Mexico, via whole-word matching, since "fiscalização" extends
+# past the word boundary. (2) "iva" (the VAT acronym) is a substring of
+# extremely common Portuguese words ending in "-iva" (contributiva,
+# educativa, ...) -- confirmed on a real ~220-bill sample that 25 of 27
+# substring hits were exactly this, all resolved by whole-word matching too.
+# (3) "imposto" is a genuine homonym with no substring difference at all:
+# it's both the noun ("tax") and the past participle of "impor" ("imposed"),
+# spelled identically -- e.g. "o plano ... imposto pelos Estados Unidos"
+# ("the plan ... imposed by the United States"). Confirmed on the same
+# sample that this "imposto por/pelo/pela" passive-voice construction
+# accounts for every real false positive, so it's excluded with a negative
+# lookahead rather than dropping "imposto" from the list entirely.
+PORTUGAL_TAX_KEYWORDS = [
+    "imposto",
+    "impostos",
+    "fiscal",
+    "iva",
+    "irs",
+    "irc",
+    "tributação",
+    "tributário",
+    "tributária",
+    "tributários",
+    "tributárias",
+    "contribuinte",
+    "contribuintes",
+    "aduaneiro",
+    "aduaneira",
+    "aduaneiros",
+    "aduaneiras",
+    "alfândega",
+    "alfândegas",
+]
+
+_PORTUGAL_TAX_WORD_RE = re.compile(
+    r"\b("
+    + "|".join(re.escape(kw) for kw in PORTUGAL_TAX_KEYWORDS if kw not in ("imposto", "impostos"))
+    + r")\b",
+    re.IGNORECASE,
+)
+_PORTUGAL_IMPOSTO_RE = re.compile(r"\b(impostos?)\b(?!\s+(?:por|pel[oa]s?)\b)", re.IGNORECASE)
+
+
+def is_tax_relevant_portugal(title: str, summary: str | None = None) -> tuple[bool, list[str]]:
+    haystack = " ".join(t for t in (title, summary) if t)
+    matched = {m.lower() for m in _PORTUGAL_TAX_WORD_RE.findall(haystack)}
+    matched.update(m.lower() for m in _PORTUGAL_IMPOSTO_RE.findall(haystack))
+    matched_sorted = sorted(matched)
+    return bool(matched_sorted), matched_sorted

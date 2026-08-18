@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     germany_bundestag_wahlperiode: str = "21"
     singapore_parliament_base_url: str = "https://www.parliament.gov.sg"
     mexico_diputados_base_url: str = "https://gaceta.diputados.gob.mx"
+    portugal_parlamento_base_url: str = "https://www.parlamento.pt"
     pwc_tax_library_base_url: str = "https://www.pwc.com"
     ey_tax_alerts_base_url: str = "https://api-search.ey.com"
     kpmg_taxnewsflash_europe_base_url: str = "https://kpmg.com"

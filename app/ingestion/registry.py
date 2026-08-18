@@ -14,6 +14,7 @@ from app.ingestion.india_prs import IndiaPrsAdapter
 from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
 from app.ingestion.mexico_diputados import MexicoDiputadosAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
+from app.ingestion.portugal_parlamento import PortugalParlamentoAdapter
 from app.ingestion.publications_base import PublicationSourceAdapter
 from app.ingestion.pwc_tax_library import PwcTaxLibraryAdapter
 from app.ingestion.singapore_parliament import SingaporeParliamentAdapter
@@ -83,6 +84,12 @@ def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
     # this one is more fragile than the others (coupled to a Next.js build
     # artifact, not just a stable URL).
     adapters.append(SingaporeParliamentAdapter(base_url=settings.singapore_parliament_base_url))
+
+    # No auth required; small current-legislature dataset (~220 bills)
+    # re-pulled in full every run, like Spain/UK. No REST/JSON API exists --
+    # this scrapes a classic ASP.NET WebForms search page, chaining its
+    # postback pagination (see app/ingestion/portugal_parlamento.py).
+    adapters.append(PortugalParlamentoAdapter(base_url=settings.portugal_parlamento_base_url))
 
     return adapters
 

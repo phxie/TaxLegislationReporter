@@ -20,18 +20,20 @@ from federal, state, and secondary sources into a single searchable web dashboar
 | Germany (national) | [Bundestag DIP API](https://dip.bundestag.de/) | Free API key required (a public demo key ships as the default — see below) |
 | Singapore (national) | [Parliament of Singapore — Bills Introduced](https://www.parliament.gov.sg/parliamentary-business/bills-introduced) | No auth required |
 | Mexico (national) | [Cámara de Diputados — Gaceta Parlamentaria](https://gaceta.diputados.gob.mx/gp_iniciativas.html) | No auth required |
+| Portugal (national) | [Assembleia da República — Iniciativas Legislativas](https://www.parlamento.pt/ActividadeParlamentar/Paginas/IniciativasLegislativas.aspx) | No auth required |
 
 Bills are filtered to tax-relevant ones using each source's own tax signal where available
 (Congress.gov policy area "Taxation", California's `taxlevy` flag) with a shared keyword
 fallback (see `app/ingestion/tax_filter.py`) — Canada, Spain, the UK, India, France, Germany,
-Singapore, and Mexico have no such flag, so they fall back to keyword matching. Canada's is
-matched against the bill's full legislative summary as well as its title (Canadian tax bills are
-often titled generically, e.g. "Budget Implementation Act, 2026, No. 1"). Spain's, France's,
-Germany's, and Mexico's titles are in Spanish/French/German, so separate
-`SPANISH_TAX_KEYWORDS`/`FRENCH_TAX_KEYWORDS`/`GERMAN_TAX_KEYWORDS`/`MEXICO_TAX_KEYWORDS` lists are
-matched against the title (Spain: title only, no legislative-summary text is available from that
-source; France: title only too — see below; Germany: title and abstract, like Canada — see
-below). The UK's, India's, and France's main annual tax bill are all literally titled some
+Singapore, Mexico, and Portugal have no such flag, so they fall back to keyword matching.
+Canada's is matched against the bill's full legislative summary as well as its title (Canadian
+tax bills are often titled generically, e.g. "Budget Implementation Act, 2026, No. 1"). Spain's,
+France's, Germany's, Mexico's, and Portugal's titles are in Spanish/French/German/Portuguese, so
+separate
+`SPANISH_TAX_KEYWORDS`/`FRENCH_TAX_KEYWORDS`/`GERMAN_TAX_KEYWORDS`/`MEXICO_TAX_KEYWORDS`/`PORTUGAL_TAX_KEYWORDS`
+lists are matched against the title (Spain: title only, no legislative-summary text is available
+from that source; France: title only too — see below; Germany: title and abstract, like Canada —
+see below). The UK's, India's, and France's main annual tax bill are all literally titled some
 variant of "Finance Bill" ("Projet de loi de finances" in French) with no "tax" wording at all,
 so that's special-cased the same way Congress.gov's policy-area flag is, ahead of the keyword
 fallback, for all three. Germany needs no such special case: German compounds tax terms directly
@@ -49,7 +51,16 @@ Fiscal, Coordinación Fiscal) and "prosecutorial/audit" (Fiscalía General, fisc
 homonyms, not just a shared substring — so `MEXICO_TAX_KEYWORDS` also uses whole-word matching,
 which resolves it cleanly since "fiscalía"/"fiscalización" extend past the word boundary;
 "hacienda" was deliberately left out of the list after checking its real matches turned out to
-all be non-tax bills (see `app/ingestion/mexico_diputados.py`).
+all be non-tax bills (see `app/ingestion/mexico_diputados.py`). Portuguese hits the same two
+substring problems as Mexican Spanish ("fiscal" vs. "fiscalização"; "IVA" is also a substring of
+extremely common words ending in "-iva" like "contributiva" — 25 of 27 substring hits in a real
+sample were exactly this), both resolved the same way with whole-word matching — plus a third,
+genuine homonym with no substring fix at all: "imposto" is spelled identically whether it means
+the noun "tax" or the past participle of "impor" ("imposed"), e.g. "o plano ... imposto pelos
+Estados Unidos" ("the plan ... imposed by the United States"). Since every real false positive
+followed that exact "imposto por/pelo/pela" passive-voice pattern, it's excluded with a negative
+lookahead instead of dropping "imposto" from the list entirely (see
+`app/ingestion/portugal_parlamento.py`).
 
 Canada re-pulls the current Parliament session's full bill list every run (a single request,
 ~200 bills), but only re-fetches per-bill detail — where the status timeline and legislative
@@ -152,6 +163,25 @@ of the LXVI legislature) is re-pulled every run, since no incremental filter is 
 that volume, this is in the "heavy" adapter tier alongside California/France rather than
 alongside Spain/UK/Germany/Singapore (see `app/ingestion/mexico_diputados.py`).
 
+Portugal's Assembleia da República has no REST/JSON API either — its "Dados Abertos" (open data)
+download page is an old SharePoint document library whose file links are built client-side from
+an encrypted parameter, confirmed unworkable even with a headless browser (renders blank), and
+a community-maintained mirror of its direct download URLs is years stale. This adapter instead
+scrapes the live "Iniciativas Legislativas" search page directly — a classic ASP.NET WebForms
+page whose default view already lists the current legislature's bills. Both it and the per-bill
+detail page (addressed by a stable numeric "BID", giving status timeline and sponsors) are plain
+server-rendered HTML, but the listing's pagination has no URL/query-string form at all: it's
+wired to `__doPostBack`, requiring the page's own `__VIEWSTATE`/`__VIEWSTATEGENERATOR`/
+`__EVENTVALIDATION` hidden fields to be replayed on each POST, chained page to page, following
+each response's own "next page" link rather than a hardcoded page-number pattern. Confirmed
+reproducible with plain `httpx` (validated with a throwaway Playwright spike, removed again
+afterwards — not a runtime dependency, same as the PwC/Singapore precedent), making this the
+most fragile source in the project by mechanism even though the underlying dataset is small and
+bounded (~220 bills for the current legislature, re-pulled in full every run like Spain/UK). The
+site is also unusually slow with high latency variance — a live run observed individual requests
+taking anywhere from ~10s to ~90s — so this adapter's `httpx` client uses a longer timeout (90s)
+than every other adapter's default 30s (see `app/ingestion/portugal_parlamento.py`).
+
 California only publishes a full session snapshot once a day (its smaller daily delta file
 omits bill titles/subjects), so it's ingested on its own, longer schedule rather than the
 shared interval used for the other sources.
@@ -248,7 +278,7 @@ Or scope it to specific sources:
 
 ```
 uv run scripts/run_scrape_once.py FEDERAL
-uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA FRANCE GERMANY SINGAPORE MEXICO
+uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA FRANCE GERMANY SINGAPORE MEXICO PORTUGAL
 uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 ```
 
@@ -300,6 +330,7 @@ app/
 │   ├── germany_bundestag.py
 │   ├── singapore_parliament.py
 │   ├── mexico_diputados.py
+│   ├── portugal_parlamento.py
 │   ├── tax_filter.py           # Shared tax-relevance rules
 │   ├── diff.py                  # Bill insert/update + change detection
 │   ├── publications_base.py      # NormalizedPublication / PublicationSourceAdapter protocol
