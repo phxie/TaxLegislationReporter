@@ -16,6 +16,17 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
 
+# The other 48 US states, sourced via Open States (see
+# app/ingestion/openstates.py) -- California and New York already have
+# dedicated adapters pulling directly from those states' own legislatures,
+# so they're deliberately excluded here rather than duplicated.
+OPENSTATES_JURISDICTIONS = (
+    "AK", "AL", "AR", "AZ", "CO", "CT", "DE", "FL", "GA", "HI", "IA", "ID",
+    "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS",
+    "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "OH", "OK", "OR", "PA",
+    "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY",
+)
+
 JURISDICTIONS = (
     "FEDERAL",
     "CA",
@@ -29,7 +40,7 @@ JURISDICTIONS = (
     "SINGAPORE",
     "MEXICO",
     "PORTUGAL",
-)
+) + OPENSTATES_JURISDICTIONS
 PUBLICATION_SOURCES = ("PWC_TAX_LIBRARY", "EY_TAX_ALERTS", "KPMG_TAXNEWSFLASH_EUROPE")
 
 

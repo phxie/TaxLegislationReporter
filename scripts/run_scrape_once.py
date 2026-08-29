@@ -3,7 +3,7 @@
 Usage: uv run scripts/run_scrape_once.py [source ...]
        e.g. uv run scripts/run_scrape_once.py FEDERAL
             uv run scripts/run_scrape_once.py CA NY CANADA SPAIN UK INDIA FRANCE GERMANY \
-                SINGAPORE MEXICO PORTUGAL
+                SINGAPORE MEXICO PORTUGAL OPENSTATES
             uv run scripts/run_scrape_once.py PWC_TAX_LIBRARY EY_TAX_ALERTS KPMG_TAXNEWSFLASH_EUROPE
 """
 

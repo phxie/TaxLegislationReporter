@@ -14,6 +14,7 @@ from app.ingestion.india_prs import IndiaPrsAdapter
 from app.ingestion.kpmg_taxnewsflash_europe import KpmgTaxNewsFlashEuropeAdapter
 from app.ingestion.mexico_diputados import MexicoDiputadosAdapter
 from app.ingestion.new_york import NewYorkSenateAdapter
+from app.ingestion.openstates import DEFAULT_JURISDICTIONS, OpenStatesAdapter
 from app.ingestion.portugal_parlamento import PortugalParlamentoAdapter
 from app.ingestion.publications_base import PublicationSourceAdapter
 from app.ingestion.pwc_tax_library import PwcTaxLibraryAdapter
@@ -96,7 +97,7 @@ def build_light_adapters(settings: Settings) -> list[SourceAdapter]:
 
 def build_heavy_adapters(settings: Settings) -> list[SourceAdapter]:
     """Adapters that are expensive (large downloads) and run on their own, longer cadence."""
-    return [
+    adapters: list[SourceAdapter] = [
         CaliforniaAdapter(base_url=settings.ca_pubinfo_base_url),
         # No auth required; a ~10MB bulk zip of every dossier for the
         # current legislature (no per-bill requests needed at all, unlike
@@ -112,6 +113,24 @@ def build_heavy_adapters(settings: Settings) -> list[SourceAdapter]:
         # rather than in the light tier (see app/ingestion/mexico_diputados.py).
         MexicoDiputadosAdapter(base_url=settings.mexico_diputados_base_url),
     ]
+
+    if settings.openstates_api_key:
+        # Third-party aggregator (Plural Policy), not a government source --
+        # covers the other 48 US states (CA/NY already have dedicated
+        # adapters above). One API call per state to resolve its current
+        # session's bulk CSV export, then downloads that export from an
+        # unauthenticated, non-rate-limited static host -- large aggregate
+        # volume (thousands of bills across 48 states) is why this belongs
+        # here rather than in the light tier. See app/ingestion/openstates.py
+        # for why the live search API (rate-limited to 10 req/min, and not
+        # a meaningfully narrow filter) was rejected in favor of this.
+        adapters.append(
+            OpenStatesAdapter(api_key=settings.openstates_api_key, jurisdictions=list(DEFAULT_JURISDICTIONS))
+        )
+    else:
+        logger.warning("OPENSTATES_API_KEY not set; skipping Open States adapter (48 US states)")
+
+    return adapters
 
 
 def build_all_adapters(settings: Settings) -> list[SourceAdapter]:

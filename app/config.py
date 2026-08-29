@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     congress_api_key: str = ""
     ny_senate_api_key: str = ""
     anthropic_api_key: str = ""
+    # Covers the other 48 US states (see app/ingestion/openstates.py and
+    # OPENSTATES_JURISDICTIONS in app/models.py). Register a free key at
+    # https://open.pluralpolicy.com/accounts/profile/.
+    openstates_api_key: str = ""
 
     scrape_interval_hours: int = 6
     # California only publishes a full ~1GB session snapshot once a day, so it

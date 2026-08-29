@@ -6,6 +6,7 @@ from app.ingestion.tax_filter import (
     is_tax_relevant_india,
     is_tax_relevant_mexico,
     is_tax_relevant_ny,
+    is_tax_relevant_openstates,
     is_tax_relevant_singapore,
     is_tax_relevant_spain,
     is_tax_relevant_uk,
@@ -235,4 +236,28 @@ def test_mexico_not_relevant():
         "en materia de transportes"
     )
     assert relevant is False
+    assert matched == []
+
+
+def test_openstates_keyword_match():
+    relevant, matched = is_tax_relevant_openstates("An Act relating to the sales tax on digital goods")
+    assert relevant is True
+    assert "sales tax" in matched
+
+
+def test_openstates_taxicab_is_not_a_false_positive():
+    # "Taxicab" contains "tax" as a substring -- the same pitfall confirmed
+    # on Singapore's real data ("Taxi Booking Service Providers Bill"), so
+    # this reuses the shared TAX_KEYWORDS list but with whole-word matching
+    # instead of matching_keywords()'s plain substring check.
+    relevant, matched = is_tax_relevant_openstates("An Act relating to taxicab and rideshare licensing")
+    assert relevant is False
+    assert matched == []
+
+
+def test_openstates_not_relevant():
+    relevant, matched = is_tax_relevant_openstates("An Act relating to state park funding")
+    assert relevant is False
+    assert matched == []
+    assert matched == []
     assert matched == []

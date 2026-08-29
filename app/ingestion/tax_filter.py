@@ -347,3 +347,23 @@ def is_tax_relevant_portugal(title: str, summary: str | None = None) -> tuple[bo
     matched.update(m.lower() for m in _PORTUGAL_IMPOSTO_RE.findall(haystack))
     matched_sorted = sorted(matched)
     return bool(matched_sorted), matched_sorted
+
+
+# Open States spans every US state through one adapter, in English, so it
+# could in principle reuse the shared substring-based `matching_keywords()`
+# above -- but that helper has the exact same "taxi" pitfall confirmed on
+# Singapore's real data (see app/ingestion/singapore_parliament.py): a bill
+# title containing "Taxicab" or "Taxidermy" would substring-match "tax".
+# Rather than touching `matching_keywords()` itself (used by five other
+# adapters, out of scope to re-validate here), this reuses the same
+# `TAX_KEYWORDS` word list but matches it with whole-word boundaries.
+_OPENSTATES_TAX_WORD_RE = re.compile(
+    r"\b(" + "|".join(re.escape(kw) for kw in TAX_KEYWORDS) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def is_tax_relevant_openstates(title: str, summary: str | None = None) -> tuple[bool, list[str]]:
+    haystack = " ".join(t for t in (title, summary) if t)
+    matched = sorted({m.lower() for m in _OPENSTATES_TAX_WORD_RE.findall(haystack)})
+    return bool(matched), matched
