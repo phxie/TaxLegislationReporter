@@ -1,3 +1,4 @@
+<div class="table-wrap">
 <table id="publication-table">
   <thead>
     <tr>
@@ -13,7 +14,7 @@
   <tbody>
     {% for pub in publications %}
     <tr>
-      <td>{{ pub.published_date or "-" }}</td>
+      <td class="mono">{{ pub.published_date or "-" }}</td>
       <td><a href="/publications/{{ pub.id }}">{{ pub.title }}</a></td>
       <td>{{ pub.summary or "-" }}</td>
       <td>
@@ -26,7 +27,7 @@
         -
         {% endif %}
       </td>
-      <td>{{ pub.content_type or "-" }}</td>
+      <td class="col-status">{% if pub.content_type %}<span class="pill {{ pub.content_type|pill_class }}">{{ pub.content_type }}</span>{% else %}-{% endif %}</td>
       <td>{{ pub.relevant_jurisdiction or "-" }}</td>
       <td>{{ pub.source_label }}</td>
     </tr>
@@ -35,3 +36,4 @@
     {% endfor %}
   </tbody>
 </table>
+</div>

@@ -1,9 +1,16 @@
-<ol>
+<div class="timeline">
   {% for event in bill.status_events %}
-  <li>
-    <strong>{{ event.event_date }}</strong> &mdash; {{ event.action_text }}
-  </li>
+  <div class="timeline-row">
+    <div class="timeline-rail">
+      <div class="timeline-dot"></div>
+      {% if not loop.last %}<div class="timeline-line"></div>{% endif %}
+    </div>
+    <div class="timeline-body">
+      <div class="timeline-date mono">{{ event.event_date }}</div>
+      <div class="timeline-text">{{ event.action_text }}</div>
+    </div>
+  </div>
   {% else %}
-  <li><em>No status history recorded yet.</em></li>
+  <p><em>No status history recorded yet.</em></p>
   {% endfor %}
-</ol>
+</div>

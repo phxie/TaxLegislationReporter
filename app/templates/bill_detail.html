@@ -2,35 +2,72 @@
 {% block title %}{{ bill.jurisdiction }} {{ bill.bill_number }} — Tax Legislation Reporter{% endblock %}
 {% block content %}
 
-<p><a href="/">&larr; Back to dashboard</a></p>
+<a class="back-link" href="/">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"/></svg>
+  Back to dashboard
+</a>
 
-<article>
-  <h2>{{ bill.jurisdiction }} {{ bill.bill_number }}</h2>
-  <p>{{ bill.title }}</p>
-  {% if bill.summary and bill.summary != bill.title %}<p>{{ bill.summary }}</p>{% endif %}
+<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom: 0.4rem;">
+  <h1 class="mono" style="font-size: 1.5rem;">{{ bill.jurisdiction }} {{ bill.bill_number }}</h1>
+  {% if bill.status_text %}<span class="pill {{ bill.status_text|pill_class }}">{{ bill.status_text }}</span>{% endif %}
+</div>
+<p style="font-size: 1rem; margin: 0 0 0.25rem;">{{ bill.title }}</p>
+{% if bill.summary and bill.summary != bill.title %}<p style="color: var(--text-muted); font-size: 0.85rem; max-width: 70ch;">{{ bill.summary }}</p>{% endif %}
 
-  {% if bill.ai_summary %}
-  <blockquote>
-    <strong>AI summary</strong>
-    <p>{{ bill.ai_summary }}</p>
-  </blockquote>
-  {% endif %}
+{% if bill.ai_summary %}
+<div class="ai-summary">
+  <div class="ai-summary-label">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2 L13.6 9.2 L20.5 11 L13.6 12.8 L12 20 L10.4 12.8 L3.5 11 L10.4 9.2 Z"/></svg>
+    AI summary
+  </div>
+  <p>{{ bill.ai_summary }}</p>
+</div>
+{% endif %}
 
-  <table>
-    <tbody>
-      <tr><th>Status</th><td>{{ bill.status_text or "-" }}</td></tr>
-      <tr><th>Session</th><td>{{ bill.session }}</td></tr>
-      <tr><th>Introduced</th><td>{{ bill.introduced_date or "-" }}</td></tr>
-      <tr><th>Last action</th><td>{{ bill.last_action_date or "-" }}</td></tr>
-      <tr><th>Sponsors</th><td>{{ (bill.sponsors_json or []) | join(", ") }}</td></tr>
-      <tr><th>Tax keywords matched</th><td>{{ (bill.tax_keywords_matched or []) | join(", ") }}</td></tr>
-      <tr><th>Source</th><td>{{ bill.source_label }}</td></tr>
-      <tr><th>Source URL</th><td>{% if bill.source_url %}<a href="{{ bill.source_url }}" target="_blank" rel="noopener">{{ bill.source_url }}</a>{% else %}-{% endif %}</td></tr>
-    </tbody>
-  </table>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: start;">
 
-  <h3>Status timeline</h3>
-  {% include "partials/_status_timeline.html" %}
-</article>
+  <div class="card" style="overflow:hidden;">
+    <div style="padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border);">
+      <h2 style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted);">Details</h2>
+    </div>
+    <table class="detail-meta" style="width:100%; margin:0;">
+      <tbody>
+        <tr><th>Status</th><td class="col-status">{% if bill.status_text %}<span class="pill {{ bill.status_text|pill_class }}">{{ bill.status_text }}</span>{% else %}-{% endif %}</td></tr>
+        <tr><th>Session</th><td>{{ bill.session }}</td></tr>
+        <tr><th>Introduced</th><td class="mono">{{ bill.introduced_date or "-" }}</td></tr>
+        <tr><th>Last action</th><td class="mono">{{ bill.last_action_date or "-" }}</td></tr>
+        <tr><th>Sponsors</th><td>{{ (bill.sponsors_json or []) | join(", ") or "-" }}</td></tr>
+        <tr>
+          <th>Tax keywords matched</th>
+          <td>
+            {% if bill.tax_keywords_matched %}
+            <div class="kw-pills">
+              {% for kw in bill.tax_keywords_matched %}<span class="kw-pill">{{ kw }}</span>{% endfor %}
+            </div>
+            {% else %}-{% endif %}
+          </td>
+        </tr>
+        <tr><th>Source</th><td>{{ bill.source_label }}</td></tr>
+        <tr>
+          <th>Source URL</th>
+          <td>
+            {% if bill.source_url %}
+            <a href="{{ bill.source_url }}" target="_blank" rel="noopener">
+              {{ bill.source_url }}
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M7 17 L17 7"/><path d="M9 7 H17 V15"/></svg>
+            </a>
+            {% else %}-{% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="padding: 1.1rem 1.25rem;">
+    <h2 style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 1rem;">Status timeline</h2>
+    {% include "partials/_status_timeline.html" %}
+  </div>
+
+</div>
 
 {% endblock %}

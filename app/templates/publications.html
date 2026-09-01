@@ -2,8 +2,14 @@
 {% block title %}Publications — Tax Legislation Reporter{% endblock %}
 {% block content %}
 
-<article>
-  <h3>Publications</h3>
+<div class="page-header">
+  <div>
+    <h1>Publications</h1>
+    <p>Guidance, notices and regulatory releases from tax authorities worldwide.</p>
+  </div>
+</div>
+
+<section>
   <form class="filters" hx-get="/publications/partials/list" hx-target="#publication-table" hx-swap="outerHTML"
         hx-trigger="change from:select[name='source'], change from:select[name='relevant_jurisdiction'], change from:input[type='date'], keyup delay:400ms from:input[name='keyword']">
     <label>Source
@@ -34,6 +40,6 @@
   </form>
 
   {% include "partials/publication_table.html" %}
-</article>
+</section>
 
 {% endblock %}

@@ -2,30 +2,64 @@
 {% block title %}{{ publication.title }} — Tax Legislation Reporter{% endblock %}
 {% block content %}
 
-<p><a href="/publications">&larr; Back to publications</a></p>
+<a class="back-link" href="/publications">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"/></svg>
+  Back to publications
+</a>
 
-<article>
-  <h2>{{ publication.title }}</h2>
-  {% if publication.summary %}<p>{{ publication.summary }}</p>{% endif %}
+<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom: 0.4rem;">
+  <h1 style="font-size: 1.35rem;">{{ publication.title }}</h1>
+  {% if publication.content_type %}<span class="pill {{ publication.content_type|pill_class }}">{{ publication.content_type }}</span>{% endif %}
+</div>
+{% if publication.summary %}<p style="color: var(--text-muted); font-size: 0.9rem; max-width: 70ch;">{{ publication.summary }}</p>{% endif %}
 
-  {% if publication.ai_summary %}
-  <blockquote>
-    <strong>AI summary</strong>
-    <p>{{ publication.ai_summary }}</p>
-  </blockquote>
-  {% endif %}
+{% if publication.ai_summary %}
+<div class="ai-summary">
+  <div class="ai-summary-label">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2 L13.6 9.2 L20.5 11 L13.6 12.8 L12 20 L10.4 12.8 L3.5 11 L10.4 9.2 Z"/></svg>
+    AI summary
+  </div>
+  <p>{{ publication.ai_summary }}</p>
+</div>
+{% endif %}
 
-  <table>
+<div class="card" style="overflow:hidden; max-width: 640px;">
+  <div style="padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border);">
+    <h2 style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted);">Details</h2>
+  </div>
+  <table class="detail-meta" style="width:100%; margin:0;">
     <tbody>
-      <tr><th>Published</th><td>{{ publication.published_date or "-" }}</td></tr>
-      <tr><th>Type</th><td>{{ publication.content_type or "-" }}</td></tr>
+      <tr><th>Published</th><td class="mono">{{ publication.published_date or "-" }}</td></tr>
+      <tr><th>Type</th><td class="col-status">{% if publication.content_type %}<span class="pill {{ publication.content_type|pill_class }}">{{ publication.content_type }}</span>{% else %}-{% endif %}</td></tr>
       <tr><th>Jurisdiction</th><td>{{ publication.relevant_jurisdiction or "-" }}</td></tr>
-      <tr><th>Topics</th><td>{{ (publication.topic_tags_json or []) | join(", ") }}</td></tr>
-      <tr><th>Tax keywords matched</th><td>{{ (publication.tax_keywords_matched or []) | join(", ") }}</td></tr>
+      <tr>
+        <th>Topics</th>
+        <td>
+          {% if publication.topic_tags_json %}
+          <div class="kw-pills">{% for tag in publication.topic_tags_json %}<span class="kw-pill">{{ tag }}</span>{% endfor %}</div>
+          {% else %}-{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Tax keywords matched</th>
+        <td>
+          {% if publication.tax_keywords_matched %}
+          <div class="kw-pills">{% for kw in publication.tax_keywords_matched %}<span class="kw-pill">{{ kw }}</span>{% endfor %}</div>
+          {% else %}-{% endif %}
+        </td>
+      </tr>
       <tr><th>Source</th><td>{{ publication.source_label }}</td></tr>
-      <tr><th>Source URL</th><td><a href="{{ publication.url }}" target="_blank" rel="noopener">{{ publication.url }}</a></td></tr>
+      <tr>
+        <th>Source URL</th>
+        <td>
+          <a href="{{ publication.url }}" target="_blank" rel="noopener">
+            {{ publication.url }}
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M7 17 L17 7"/><path d="M9 7 H17 V15"/></svg>
+          </a>
+        </td>
+      </tr>
     </tbody>
   </table>
-</article>
+</div>
 
 {% endblock %}

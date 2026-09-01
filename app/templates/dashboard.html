@@ -1,15 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
 
-<article>
-  <h3>What's new</h3>
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Cross-jurisdiction tax legislation, tracked daily.</p>
+  </div>
+</div>
+
+<section class="card" style="padding: 1.1rem 1.25rem; margin-bottom: 1.5rem;">
+  <h2 style="font-size: 0.95rem; margin-bottom: 0.75rem;">What's new</h2>
   <div hx-get="/partials/recent-feed" hx-trigger="load" hx-swap="innerHTML">
     {% include "partials/recent_feed.html" %}
   </div>
-</article>
+</section>
 
-<article>
-  <h3>Bills</h3>
+<section>
+  <h2 style="font-size: 1.05rem; margin-bottom: 0.75rem;">Bills</h2>
   <form class="filters" hx-get="/partials/bills" hx-target="#bill-table" hx-swap="outerHTML"
         hx-trigger="change from:select[name='jurisdiction'], change from:input[type='date'], keyup delay:400ms from:input[name='keyword']">
     <label>Jurisdiction
@@ -32,6 +39,6 @@
   </form>
 
   {% include "partials/bill_table.html" %}
-</article>
+</section>
 
 {% endblock %}

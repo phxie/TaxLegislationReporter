@@ -1,0 +1,409 @@
+/* Tax Legislation Reporter — design system
+   Layered on top of Pico CSS (base resets, container width, form control
+   sizing). This file owns typography, color, nav, cards, tables and pills. */
+
+:root {
+  --bg: oklch(98% 0.004 260);
+  --bg-subtle: oklch(96% 0.006 260);
+  --surface: oklch(100% 0 0);
+  --border: oklch(90% 0.007 260);
+  --border-strong: oklch(83% 0.009 260);
+  --text: oklch(24% 0.02 260);
+  --text-muted: oklch(47% 0.016 260);
+  --text-faint: oklch(64% 0.012 260);
+  --navy: oklch(27% 0.055 262);
+  --navy-2: oklch(33% 0.06 262);
+  --accent: oklch(74% 0.14 75);
+  --accent-text: oklch(40% 0.11 68);
+  --accent-bg: oklch(95% 0.045 80);
+
+  /* Pico overrides so native form controls, links and spacing pick up the
+     new palette without having to fight Pico's own variables. */
+  --pico-primary: var(--navy);
+  --pico-primary-background: var(--navy);
+  --pico-primary-hover: var(--navy-2);
+  --pico-primary-hover-background: var(--navy-2);
+  --pico-background-color: var(--bg);
+  --pico-color: var(--text);
+  --pico-muted-color: var(--text-muted);
+  --pico-h1-color: var(--text);
+  --pico-h2-color: var(--text);
+  --pico-h3-color: var(--text);
+  --pico-font-family: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+}
+
+body {
+  font-family: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-weight: 600;
+}
+
+a {
+  color: var(--navy);
+}
+a:hover {
+  color: var(--accent-text);
+}
+
+.mono {
+  font-family: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+}
+
+/* ---------- Top navigation ---------- */
+
+nav.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--navy);
+  margin: 0 0 1.5rem;
+  padding: 0.9rem 1.5rem;
+  color: #fff;
+}
+
+nav.top .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+nav.top .brand svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+nav.top .brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+nav.top .brand-text strong {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #fff;
+}
+
+nav.top .brand-text small {
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: oklch(78% 0.02 262);
+}
+
+nav.top .links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+nav.top .links ul {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav.top .links a {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: oklch(82% 0.015 262);
+  text-decoration: none;
+}
+
+nav.top .links a:hover {
+  color: #fff;
+}
+
+nav.top .links a.active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+/* ---------- Page header ---------- */
+
+.page-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.page-header p {
+  margin: 0.3rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* ---------- Filter bar ---------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: flex-end;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+.filters > * {
+  flex: 1 1 160px;
+  margin-bottom: 0;
+}
+.filters label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.filters input,
+.filters select {
+  margin-top: 0.35rem;
+}
+
+/* ---------- Tables ---------- */
+
+table {
+  border-collapse: collapse;
+}
+
+table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-strong);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+table tbody td {
+  font-size: 0.85rem;
+  vertical-align: top;
+  color: var(--text);
+  background: var(--surface);
+}
+
+table tbody tr:nth-child(even) td {
+  background: oklch(99% 0.003 260);
+}
+
+table tbody tr:hover td {
+  background: var(--accent-bg);
+}
+
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: auto;
+}
+.table-wrap table {
+  width: 100%;
+  margin: 0;
+}
+.table-wrap table :where(th, td) {
+  --pico-table-border-color: var(--border);
+}
+
+/* ---------- Status / type pills ---------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: normal;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Status/type cells in the list tables would otherwise just widen the
+   column (and the scrollable table) to fit the pill on one line -- cap
+   the column so long status text wraps inside the pill instead. */
+.col-status {
+  max-width: 190px;
+}
+.pill-blue    { background: oklch(91% 0.03 250); color: oklch(38% 0.09 250); }
+.pill-violet  { background: oklch(92% 0.03 300); color: oklch(40% 0.10 300); }
+.pill-teal    { background: oklch(90% 0.055 180); color: oklch(35% 0.09 180); }
+.pill-green   { background: oklch(90% 0.07 148); color: oklch(34% 0.11 148); }
+.pill-amber   { background: oklch(91% 0.05 40); color: oklch(38% 0.12 40); }
+.pill-red     { background: oklch(91% 0.07 25); color: oklch(40% 0.15 25); }
+.pill-neutral { background: oklch(92% 0.006 260); color: oklch(42% 0.01 260); }
+
+.kw-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.kw-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- AI summary callout ---------- */
+
+.ai-summary {
+  background: var(--accent-bg);
+  border: 1px solid oklch(88% 0.05 78);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 0 0 1rem;
+}
+.ai-summary .ai-summary-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--accent-text);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+}
+.ai-summary p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+/* ---------- Back link ---------- */
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 1rem;
+}
+.back-link:hover {
+  color: var(--accent-text);
+}
+
+/* ---------- Detail metadata table ---------- */
+
+.detail-meta th {
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  width: 34%;
+  white-space: nowrap;
+}
+.detail-meta td {
+  font-size: 0.85rem;
+}
+
+/* ---------- Activity feed ---------- */
+
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.activity-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.activity-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.activity-icon.new     { background: var(--accent-bg); color: var(--accent-text); }
+.activity-icon.status  { background: oklch(91% 0.03 250); color: oklch(38% 0.09 250); }
+.activity-icon.updated { background: oklch(92% 0.03 300); color: oklch(40% 0.10 300); }
+.activity-meta {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+/* ---------- Status timeline ---------- */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+.timeline-row {
+  display: flex;
+  gap: 14px;
+}
+.timeline-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.timeline-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 100px;
+  background: var(--border-strong);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.timeline-row:last-child .timeline-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--navy);
+  margin-top: 4px;
+}
+.timeline-line {
+  width: 1.5px;
+  flex: 1;
+  background: var(--border);
+}
+.timeline-body {
+  padding-bottom: 18px;
+}
+.timeline-date {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+.timeline-text {
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
