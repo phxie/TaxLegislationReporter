@@ -20,4 +20,28 @@ def pill_class(value: str | None) -> str:
     return _PILL_COLORS[int(digest, 16) % len(_PILL_COLORS)]
 
 
+# Unlike pill_class above, risk_score has an actual meaning we can color by:
+# low scores are reassuring (green), high scores are a warning (red).
+def risk_class(value: int | None) -> str:
+    if value is None:
+        return "pill-neutral"
+    if value >= 67:
+        return "pill-red"
+    if value >= 34:
+        return "pill-amber"
+    return "pill-green"
+
+
+def risk_label(value: int | None) -> str:
+    if value is None:
+        return "-"
+    if value >= 67:
+        return "High"
+    if value >= 34:
+        return "Medium"
+    return "Low"
+
+
 templates.env.filters["pill_class"] = pill_class
+templates.env.filters["risk_class"] = risk_class
+templates.env.filters["risk_label"] = risk_label

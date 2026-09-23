@@ -10,6 +10,7 @@
 <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom: 0.4rem;">
   <h1 class="mono" style="font-size: 1.5rem;">{{ bill.jurisdiction }} {{ bill.bill_number }}</h1>
   {% if bill.status_text %}<span class="pill {{ bill.status_text|pill_class }}">{{ bill.status_text }}</span>{% endif %}
+  {% if bill.risk_score is not none %}<span class="pill {{ bill.risk_score|risk_class }}" title="Impact score, 0-100">Risk {{ bill.risk_score }} &middot; {{ bill.risk_score|risk_label }}</span>{% endif %}
 </div>
 <p style="font-size: 1rem; margin: 0 0 0.25rem;">{{ bill.title }}</p>
 {% if bill.summary and bill.summary != bill.title %}<p style="color: var(--text-muted); font-size: 0.85rem; max-width: 70ch;">{{ bill.summary }}</p>{% endif %}
@@ -33,6 +34,7 @@
     <table class="detail-meta" style="width:100%; margin:0;">
       <tbody>
         <tr><th>Status</th><td class="col-status">{% if bill.status_text %}<span class="pill {{ bill.status_text|pill_class }}">{{ bill.status_text }}</span>{% else %}-{% endif %}</td></tr>
+        <tr><th>Risk score</th><td>{% if bill.risk_score is not none %}<span class="pill {{ bill.risk_score|risk_class }}">{{ bill.risk_score }} &middot; {{ bill.risk_score|risk_label }}</span>{% else %}-{% endif %}</td></tr>
         <tr><th>Session</th><td>{{ bill.session }}</td></tr>
         <tr><th>Introduced</th><td class="mono">{{ bill.introduced_date or "-" }}</td></tr>
         <tr><th>Last action</th><td class="mono">{{ bill.last_action_date or "-" }}</td></tr>

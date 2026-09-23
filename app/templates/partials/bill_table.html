@@ -7,6 +7,7 @@
       <th>Title</th>
       <th>Status</th>
       <th>Last action</th>
+      <th>Risk score</th>
       <th>AI Summary</th>
       <th>Source</th>
     </tr>
@@ -20,6 +21,13 @@
       <td class="col-status">{% if bill.status_text %}<span class="pill {{ bill.status_text|pill_class }}">{{ bill.status_text }}</span>{% else %}-{% endif %}</td>
       <td class="mono">{{ bill.last_action_date or "-" }}</td>
       <td>
+        {% if bill.risk_score is not none %}
+        <span class="pill {{ bill.risk_score|risk_class }}" title="{{ bill.risk_score|risk_label }} impact">{{ bill.risk_score }} &middot; {{ bill.risk_score|risk_label }}</span>
+        {% else %}
+        -
+        {% endif %}
+      </td>
+      <td>
         {% if bill.ai_summary %}
         <details>
           <summary>Show</summary>
@@ -32,7 +40,7 @@
       <td>{{ bill.source_label }}</td>
     </tr>
     {% else %}
-    <tr><td colspan="7"><em>No bills match the current filters.</em></td></tr>
+    <tr><td colspan="8"><em>No bills match the current filters.</em></td></tr>
     {% endfor %}
   </tbody>
 </table>

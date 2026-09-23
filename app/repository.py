@@ -65,6 +65,22 @@ def list_bills_needing_summary(db: Session, *, limit: int, stale_before: dt.date
     return list(db.scalars(stmt).all())
 
 
+def list_bills_needing_risk_score(db: Session, *, limit: int, stale_before: dt.datetime) -> list[Bill]:
+    """Bills with no risk score yet, excluding ones whose score was
+    requested recently (a batch may still be in flight for them).
+    """
+    stmt = (
+        select(Bill)
+        .where(
+            Bill.risk_score.is_(None),
+            (Bill.risk_score_requested_at.is_(None)) | (Bill.risk_score_requested_at < stale_before),
+        )
+        .order_by(Bill.first_seen_at.desc())
+        .limit(limit)
+    )
+    return list(db.scalars(stmt).all())
+
+
 def recent_changes(db: Session, *, since: dt.datetime | None = None, limit: int = 50) -> list[BillChange]:
     stmt = (
         select(BillChange)

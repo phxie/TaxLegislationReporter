@@ -52,6 +52,10 @@ class Bill(Base):
             f"jurisdiction IN ({', '.join(repr(j) for j in JURISDICTIONS)})",
             name="ck_bill_jurisdiction",
         ),
+        CheckConstraint(
+            "risk_score IS NULL OR (risk_score >= 0 AND risk_score <= 100)",
+            name="ck_bill_risk_score_range",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -88,6 +92,15 @@ class Bill(Base):
     # it every run.
     ai_summary: Mapped[str | None] = mapped_column(default=None)
     ai_summary_requested_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
+
+    # LLM-assessed impact score (0 = negligible, 100 = sweeping), same
+    # Batches-API mechanism and staleness handling as `ai_summary` above --
+    # see app/ingestion/risk_score.py. Bill-only: publications aren't
+    # legislation, so "impact if enacted" doesn't apply to them.
+    risk_score: Mapped[int | None] = mapped_column(default=None)
+    risk_score_requested_at: Mapped[dt.datetime | None] = mapped_column(
         DateTime(timezone=True), default=None
     )
 
