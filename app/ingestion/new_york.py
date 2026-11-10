@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import datetime as dt
+import email.utils
 import logging
+import time
 from collections.abc import Iterator
 
 import httpx
 from tenacity import (
+    RetryCallState,
     retry,
-    retry_if_exception_type,
+    retry_if_exception,
     stop_after_attempt,
     wait_exponential,
 )
@@ -20,27 +23,85 @@ logger = logging.getLogger(__name__)
 PAGE_LIMIT = 1000
 DEFAULT_BACKFILL = dt.timedelta(days=1)
 
+# Open Legislation allows 10 requests/second per API key (enforced from 2026-12-01).
+# Stay comfortably under that.
+DEFAULT_MIN_REQUEST_INTERVAL = 0.15
+MAX_RETRY_AFTER_SECONDS = 60.0
+
+_exponential_wait = wait_exponential(multiplier=1, min=1, max=20)
+
+
+def _is_retryable(exc: BaseException) -> bool:
+    if isinstance(exc, httpx.HTTPStatusError):
+        status = exc.response.status_code
+        return status == 429 or status >= 500
+    return isinstance(exc, httpx.TransportError)
+
+
+def _retry_after_seconds(response: httpx.Response) -> float | None:
+    value = response.headers.get("Retry-After")
+    if not value:
+        return None
+    try:
+        seconds = float(value)
+    except ValueError:
+        try:
+            when = email.utils.parsedate_to_datetime(value)
+        except (TypeError, ValueError):
+            return None
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=dt.UTC)
+        seconds = (when - dt.datetime.now(dt.UTC)).total_seconds()
+    return min(max(seconds, 0.0), MAX_RETRY_AFTER_SECONDS)
+
+
+def _wait_for_retry(retry_state: RetryCallState) -> float:
+    exc = retry_state.outcome.exception() if retry_state.outcome else None
+    if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429:
+        retry_after = _retry_after_seconds(exc.response)
+        if retry_after is not None:
+            return retry_after
+    return _exponential_wait(retry_state)
+
 
 class NewYorkSenateAdapter:
     source_name = "NY"
 
-    def __init__(self, api_key: str, base_url: str = "https://legislation.nysenate.gov/api/3"):
+    def __init__(
+        self,
+        api_key: str,
+        base_url: str = "https://legislation.nysenate.gov/api/3",
+        min_request_interval: float = DEFAULT_MIN_REQUEST_INTERVAL,
+    ):
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
+        self.min_request_interval = min_request_interval
+        self._last_request_at: float | None = None
         self._client = httpx.Client(timeout=30.0)
 
     def close(self) -> None:
         self._client.close()
 
+    def _throttle(self) -> None:
+        if self._last_request_at is not None:
+            elapsed = time.monotonic() - self._last_request_at
+            remaining = self.min_request_interval - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
+        self._last_request_at = time.monotonic()
+
     @retry(
-        retry=retry_if_exception_type(httpx.HTTPError),
+        retry=retry_if_exception(_is_retryable),
         stop=stop_after_attempt(4),
-        wait=wait_exponential(multiplier=1, min=1, max=20),
+        wait=_wait_for_retry,
         reraise=True,
     )
     def _get(self, path: str, **params: object) -> dict:
         params.setdefault("key", self.api_key)
+        self._throttle()
         resp = self._client.get(f"{self.base_url}{path}", params=params)
+        if resp.status_code == 429:
+            logger.warning("NY Open Legislation rate limit hit on %s", path)
         resp.raise_for_status()
         return resp.json()
 
